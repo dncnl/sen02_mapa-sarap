@@ -17,13 +17,13 @@ const pagePaths = (() => {
   
   return {
     // For login link - works from all pages
-    loginPath: isAuthPage ? 'login.html' : (isPageFile ? 'auth/login.html' : 'src/pages/auth/login.html'),
+    loginPath: isAuthPage ? 'login.html' : (isPageFile ? 'auth/login.html' : '../src/pages/auth/login.html'),
     // For restaurant detail - works from pages directory
-    detailPath: isPageFile || isAuthPage ? 'restaurant-detail.html' : 'src/pages/restaurant-detail.html',
+    detailPath: isPageFile || isAuthPage ? 'restaurant-detail.html' : '../src/pages/restaurant-detail.html',
     // For home redirect - always go to public/index.html
     homePath: isPublicPage ? 'index.html' : (isPageFile || isAuthPage ? '../../public/index.html' : 'public/index.html'),
     // For profile page
-    profilePath: isPageFile || isAuthPage ? 'profile.html' : 'src/pages/profile.html'
+    profilePath: isPageFile || isAuthPage ? 'profile.html' : '../src/pages/profile.html'
   };
 })();
 
