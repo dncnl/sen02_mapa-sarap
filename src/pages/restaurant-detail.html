@@ -85,13 +85,13 @@
     async function renderRestaurantDetail() {
       const restaurantId = getUrlParam('id');
       if (!restaurantId) {
-        window.location.href = 'index.html';
+        window.location.href = '../../index.html';
         return;
       }
 
       const restaurant = getRestaurantById(restaurantId);
       if (!restaurant) {
-        window.location.href = '404.html';
+        window.location.href = '../../404.html';
         return;
       }
 
@@ -144,6 +144,9 @@
       const detailDescription = document.getElementById('detail-description');
       const amenitiesHtml = restaurant.amenities.map(a => `<span class="amenity-badge">${a}</span>`).join('');
       const dishesHtml = restaurant.popularDishes.map(d => `<span class="dish-badge">${d}</span>`).join('');
+      
+      // Build website link if available
+      const websiteLink = restaurant.website ? `<p><strong>Website:</strong> <a href="${restaurant.website}" target="_blank" style="color: var(--primary);">${restaurant.website}</a></p>` : '';
 
       detailDescription.innerHTML = `
         <div>
@@ -154,8 +157,9 @@
         <div style="margin-top: 1.5rem;">
           <h3 style="margin-bottom: 0.75rem;">Contact Information</h3>
           <p><strong>Address:</strong> ${restaurant.address}</p>
-          <p><strong>Phone:</strong> ${restaurant.phone}</p>
+          <p><strong>Phone:</strong> <a href="tel:${restaurant.phone}" style="color: var(--primary); text-decoration: none;">${restaurant.phone}</a></p>
           <p><strong>Hours:</strong> ${restaurant.hours}</p>
+          ${websiteLink}
         </div>
 
         <div style="margin-top: 1.5rem;">
@@ -173,8 +177,8 @@
       const ratingSelector = document.getElementById('rating-selector');
       ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
 
-      // Render Reviews
-      const restaurantReviews = await db.getReviews(restaurant.id);
+      // Render Reviews from database-aligned data
+      const restaurantReviews = getReviewsByRestaurantId(restaurant.id);
       renderReviews(restaurantReviews);
     }
 
@@ -184,27 +188,25 @@
       const user = await db.getUser();
       if (!user) {
         alert('Please login to submit a review');
-        window.location.href = 'login.html';
+        window.location.href = pagePaths.loginPath;
         return;
       }
 
+      // Note: In production, this would be sent to a backend API
+      // For now, we just show a message since new reviews can't be persisted in client-side storage
       const name = document.getElementById('review-name').value;
       const comment = document.getElementById('review-comment').value;
       const rating = parseInt(document.getElementById('review-rating-input').value) || 5;
 
-      await db.addReview({
-        restaurantId: parseInt(getUrlParam('id')),
-        userName: name,
-        comment: comment,
-        rating: rating
-      });
-
-      alert('Thank you for your review!');
+      alert('Thank you for your review! In production, this would be saved to the database.');
       document.getElementById('review-form').reset();
-      renderRestaurantDetail(); // Refresh list
     }
 
-    document.addEventListener('DOMContentLoaded', renderRestaurantDetail);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeData();
+      renderRestaurantDetail();
+      setupHeader();
+    });
   </script>
 </body>
 </html>

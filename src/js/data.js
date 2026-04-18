@@ -1,267 +1,181 @@
 // ============================================
-// MAPA-Sarap: Mock Data
+// MAPA-Sarap: Data Layer with API Integration
+// Fetches from backend API endpoints
 // ============================================
 
-const restaurants = [
-  {
-    id: 1,
-    name: "Tita's Kitchen",
-    cuisine: "Filipino",
-    rating: 4.8,
-    reviewCount: 124,
-    address: "123 MacArthur Highway, Angeles City",
-    distance: "0.3 km",
-    priceRange: "$$",
-    status: "Open",
-    imageUrl: "https://picsum.photos/400/300?random=1", // Reliable placeholder
-    lat: 15.1333,
-    lng: 120.5900,
-    hours: "8:00 AM - 9:00 PM",
-    phone: "+63 912 345 6789",
-    description: "Authentic Filipino home-cooked meals with a modern twist.",
-    popularDishes: ["Adobo", "Sinigang", "Kare-Kare"],
-    amenities: ["WiFi", "Parking", "Aircon"]
-  },
-  {
-    id: 2,
-    name: "Samgyup House",
-    cuisine: "Korean BBQ",
-    rating: 4.6,
-    reviewCount: 89,
-    address: "456 Friendship Highway, Angeles City",
-    distance: "0.8 km",
-    priceRange: "$$$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800",
-    lat: 15.135,
-    lng: 120.592,
-    hours: "11:00 AM - 11:00 PM",
-    phone: "+63 912 345 6790",
-    description: "Premium Korean BBQ experience with unlimited samgyupsal. Grill your own meat at the table while enjoying a variety of side dishes and sauces.",
-    popularDishes: ["Samgyupsal", "Bulgogi", "Kimchi Stew"],
-    amenities: ["WiFi", "Parking", "Private Rooms"]
-  },
-  {
-    id: 3,
-    name: "Pasta Bella",
-    cuisine: "Italian",
-    rating: 4.5,
-    reviewCount: 67,
-    address: "789 Balibago, Angeles City",
-    distance: "1.2 km",
-    priceRange: "$$",
-    status: "Closed",
-    imageUrl: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800",
-    lat: 15.138,
-    lng: 120.595,
-    hours: "10:00 AM - 10:00 PM",
-    phone: "+63 912 345 6791",
-    description: "Authentic Italian pasta and pizza in a cozy setting. Made with imported ingredients and traditional recipes passed down through generations.",
-    popularDishes: ["Carbonara", "Margherita Pizza", "Tiramisu"],
-    amenities: ["WiFi", "Outdoor Seating", "Pet Friendly"]
-  },
-  {
-    id: 4,
-    name: "Burger Shack",
-    cuisine: "American",
-    rating: 4.7,
-    reviewCount: 156,
-    address: "321 Fields Avenue, Angeles City",
-    distance: "0.5 km",
-    priceRange: "$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800",
-    lat: 15.134,
-    lng: 120.591,
-    hours: "10:00 AM - 12:00 AM",
-    phone: "+63 912 345 6792",
-    description: "Juicy burgers, crispy fries, and thick shakes. A casual dining spot perfect for quick bites and hangouts with friends.",
-    popularDishes: ["Cheeseburger", "Bacon Fries", "Milkshake"],
-    amenities: ["WiFi", "24/7", "Delivery"]
-  },
-  {
-    id: 5,
-    name: "Sushi Express",
-    cuisine: "Japanese",
-    rating: 4.9,
-    reviewCount: 203,
-    address: "654 Korea Town, Angeles City",
-    distance: "1.5 km",
-    priceRange: "$$$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800",
-    lat: 15.14,
-    lng: 120.598,
-    hours: "11:30 AM - 2:30 PM, 5:30 PM - 10:00 PM",
-    phone: "+63 912 345 6793",
-    description: "Fresh sushi and authentic Japanese cuisine. All sushi is prepared fresh daily by our expert sushi chefs using the finest ingredients.",
-    popularDishes: ["Salmon Sashimi", "Dragon Roll", "Ramen"],
-    amenities: ["WiFi", "Tatami Room", "Sake Bar"]
-  },
-  {
-    id: 6,
-    name: "Café Aroma",
-    cuisine: "Café",
-    rating: 4.4,
-    reviewCount: 98,
-    address: "234 Mabini Street, Angeles City",
-    distance: "0.7 km",
-    priceRange: "$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800",
-    lat: 15.132,
-    lng: 120.589,
-    hours: "7:00 AM - 8:00 PM",
-    phone: "+63 912 345 6794",
-    description: "Cozy café with specialty coffee and pastries. Perfect for studying, working, or catching up with friends over a warm cup of coffee.",
-    popularDishes: ["Cappuccino", "Croissant", "Tiramisu Cake"],
-    amenities: ["WiFi", "Charging Stations", "Outdoor Seating"]
-  },
-  {
-    id: 7,
-    name: "Thaicafe",
-    cuisine: "Thai",
-    rating: 4.5,
-    reviewCount: 102,
-    address: "987 Sapang Bato, Angeles City",
-    distance: "1.8 km",
-    priceRange: "$$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
-    lat: 15.145,
-    lng: 120.600,
-    hours: "10:00 AM - 11:00 PM",
-    phone: "+63 912 345 6795",
-    description: "Authentic Thai cuisine with bold flavors and aromatic spices. From pad thai to curries, experience the taste of Thailand right here.",
-    popularDishes: ["Pad Thai", "Green Curry", "Tom Yum Soup"],
-    amenities: ["WiFi", "Parking", "Private Rooms"]
-  },
-  {
-    id: 8,
-    name: "Kebab Palace",
-    cuisine: "Middle Eastern",
-    rating: 4.6,
-    reviewCount: 76,
-    address: "555 Clarkton, Angeles City",
-    distance: "0.4 km",
-    priceRange: "$",
-    status: "Open",
-    imageUrl: "https://images.unsplash.com/photo-1599301881399-5a1a4cec9f0e?w=800",
-    lat: 15.131,
-    lng: 120.588,
-    hours: "11:00 AM - 10:00 PM",
-    phone: "+63 912 345 6796",
-    description: "Delicious kebabs and Middle Eastern specialties. Handcrafted with fresh ingredients and marinated to perfection.",
-    popularDishes: ["Chicken Kebab", "Shawarma", "Falafel Wrap"],
-    amenities: ["WiFi", "Takeout", "Delivery"]
-  }
-];
+// API base URL - works on both localhost and production
+const API_BASE = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000/api'
+  : '/api';
 
-const reviews = [
-  {
-    id: 1,
-    restaurantId: 1,
-    userName: "Maria Santos",
-    rating: 5,
-    comment: "Best adobo I've ever had! The meat is so tender and flavorful. Definitely coming back!",
-    date: "2 days ago",
-    helpfulCount: 24
-  },
-  {
-    id: 2,
-    restaurantId: 1,
-    userName: "Juan dela Cruz",
-    rating: 4,
-    comment: "Good food and great service. A bit pricey but worth it for the quality.",
-    date: "1 week ago",
-    helpfulCount: 15
-  },
-  {
-    id: 3,
-    restaurantId: 2,
-    userName: "Anna Lee",
-    rating: 5,
-    comment: "Amazing samgyupsal! Fresh meat and plenty of side dishes. The staff is very attentive.",
-    date: "3 days ago",
-    helpfulCount: 18
-  },
-  {
-    id: 4,
-    restaurantId: 2,
-    userName: "Carlo Reyes",
-    rating: 4,
-    comment: "Great experience grilling your own meat. A bit crowded during weekends though.",
-    date: "1 week ago",
-    helpfulCount: 12
-  },
-  {
-    id: 5,
-    restaurantId: 4,
-    userName: "Miguel Torres",
-    rating: 5,
-    comment: "The burgers here are incredible! Juicy, flavorful, and reasonably priced.",
-    date: "5 days ago",
-    helpfulCount: 31
-  },
-  {
-    id: 6,
-    restaurantId: 4,
-    userName: "Sofia Garcia",
-    rating: 4,
-    comment: "Good burgers but the fries could be crispier. Still a solid spot for a quick meal.",
-    date: "2 weeks ago",
-    helpfulCount: 8
-  },
-  {
-    id: 7,
-    restaurantId: 5,
-    userName: "David Kim",
-    rating: 5,
-    comment: "Freshest sushi in the city! The sushi chefs really know their craft.",
-    date: "4 days ago",
-    helpfulCount: 27
-  },
-  {
-    id: 8,
-    restaurantId: 6,
-    userName: "Lisa Chen",
-    rating: 4,
-    comment: "Lovely café with great coffee and pastries. Perfect for studying.",
-    date: "3 days ago",
-    helpfulCount: 19
-  }
-];
+// Fallback data for offline/development (same as seeded data)
+const FALLBACK_DATA = {
+  restaurants: [
+    { id: 1, name: 'Jollibee AUF', cuisine: 'Filipino Fast Food', description: 'Popular Filipino fast food chain known for fried chicken and spaghetti.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.144760266478606, lng: 120.59528740862909, priceRange: '$', phone: '+63 45 888 1234', website: 'https://www.jollibee.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=Jollibee+AUF', hours: '7:00 AM - 10:00 PM', status: 'Open', rating: 4.5, reviewCount: 2, distance: '< 0.1 km', amenities: ['Drive Thru', 'Delivery'], popularDishes: ['Chickenjoy', 'Jolly Spaghetti'] },
+    { id: 2, name: 'McDonald\'s Angeles Intersection', cuisine: 'American Fast Food', description: 'Global fast food chain offering burgers, fries, and breakfast meals.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.142816498032756, lng: 120.59631362397157, priceRange: '$', phone: '+63 45 888 2234', website: 'https://www.mcdonalds.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=McDonalds+Angeles', hours: '24 Hours', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['24/7 Service', 'Drive Thru'], popularDishes: ['Big Mac', 'McChicken'] },
+    { id: 3, name: '24 Chicken Angeles', cuisine: 'Korean', description: 'Korean-style fried chicken with flavorful sauces.', address: 'Angeles City, Pampanga', lat: 15.142285685420413, lng: 120.59696079513589, priceRange: '$$', phone: '+63 45 888 3234', website: 'https://www.facebook.com/24chickenph', imageUrl: 'https://via.placeholder.com/600x400?text=24+Chicken+Angeles', hours: '10:00 AM - 11:00 PM', status: 'Open', rating: 5.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Takeout', 'Indoor Seating'], popularDishes: ['Yangnyeom Chicken', 'Snow Cheese Chicken'] },
+    { id: 4, name: 'Wall Street Wraps AUF', cuisine: 'Wraps and Rice Meals', description: 'Quick-service wraps and rice meals for students.', address: 'Near AUF, Angeles City, Pampanga', lat: 15.144080578526435, lng: 120.5957652922267, priceRange: '$', phone: '+63 45 888 4234', website: null, imageUrl: 'https://via.placeholder.com/600x400?text=Wall+Street+Wraps', hours: '8:00 AM - 9:00 PM', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Student Meals', 'Takeout'], popularDishes: ['Chicken Wrap', 'Beef Rice Meal'] }
+  ],
+  reviews: [
+    { id: 1, restaurantId: 1, userName: 'marias', rating: 5, comment: 'Chickenjoy is still the best comfort meal near campus.', date: '2026-04-14 08:30:00', helpfulCount: 12 },
+    { id: 2, restaurantId: 2, userName: 'juancruz', rating: 4, comment: 'Fast service and reliable breakfast options before class.', date: '2026-04-12 03:00:00', helpfulCount: 9 },
+    { id: 3, restaurantId: 3, userName: 'annalee', rating: 5, comment: 'Great sauces and crispy chicken. Best with friends.', date: '2026-04-15 10:00:00', helpfulCount: 14 },
+    { id: 4, restaurantId: 4, userName: 'carlor', rating: 4, comment: 'Affordable wraps and rice bowls for students on a budget.', date: '2026-04-13 05:40:00', helpfulCount: 6 }
+  ]
+};
 
-// Helper functions
+// ============================================
+// GLOBAL DATA STORAGE
+// ============================================
+let restaurants = [];
+let reviews = [];
+
+// ============================================
+// API FETCH FUNCTIONS
+// ============================================
+
+/**
+ * Fetch all restaurants from API with optional filters
+ * @param {Object} filters - { cuisine, priceRange, minRating, openOnly }
+ * @returns {Array} restaurants array
+ */
+async function fetchRestaurants(filters = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (filters.cuisine) params.append('cuisine', filters.cuisine);
+    if (filters.priceRange) params.append('priceRange', filters.priceRange);
+    if (filters.minRating) params.append('minRating', filters.minRating);
+    if (filters.openOnly) params.append('openOnly', filters.openOnly);
+
+    const response = await fetch(`${API_BASE}/restaurants?${params}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    
+    restaurants = await response.json();
+    return restaurants;
+  } catch (error) {
+    console.warn('Failed to fetch restaurants from API, using fallback:', error);
+    restaurants = FALLBACK_DATA.restaurants;
+    return restaurants;
+  }
+}
+
+/**
+ * Fetch reviews for a specific restaurant
+ * @param {number} placeId - restaurant ID
+ * @returns {Array} reviews array
+ */
+async function fetchReviews(placeId) {
+  try {
+    const response = await fetch(`${API_BASE}/reviews?placeId=${placeId}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Failed to fetch reviews for restaurant ${placeId}, using fallback:`, error);
+    return FALLBACK_DATA.reviews.filter(r => r.restaurantId === parseInt(placeId));
+  }
+}
+
+/**
+ * Fetch statistics from API
+ * @returns {Object} stats object
+ */
+async function fetchStats() {
+  try {
+    const response = await fetch(`${API_BASE}/stats`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to fetch stats from API, using fallback:', error);
+    const fallback = FALLBACK_DATA.restaurants;
+    return {
+      totalRestaurants: fallback.length,
+      avgRating: (fallback.reduce((sum, r) => sum + r.rating, 0) / fallback.length).toFixed(1),
+      totalReviews: FALLBACK_DATA.reviews.length,
+      totalRatings: fallback.reduce((sum, r) => sum + r.reviewCount, 0)
+    };
+  }
+}
+
+/**
+ * Initialize data on page load
+ */
+async function initializeData() {
+  try {
+    console.log('Loading restaurants from API...');
+    await fetchRestaurants();
+    console.log(`Loaded ${restaurants.length} restaurants`);
+  } catch (error) {
+    console.error('Failed to initialize data:', error);
+  }
+}
+
+// ============================================
+// HELPER FUNCTIONS (Frontend API)
+// ============================================
+
+// Get all unique cuisines for filter dropdown
 function getCuisines() {
-  const cuisines = ["All", ...new Set(restaurants.map(r => r.cuisine))];
+  const cuisines = ['All', ...new Set(restaurants.map(r => r.cuisine))];
   return cuisines;
 }
 
-function getStats() {
-  const totalRestaurants = restaurants.length;
-  const avgRating = (restaurants.reduce((sum, r) => sum + r.rating, 0) / restaurants.length).toFixed(1);
-  const totalReviews = reviews.length;
-  const topRatedCount = restaurants.filter(r => r.rating >= 4.7).length;
-  
-  return {
-    totalRestaurants,
-    avgRating,
-    totalReviews,
-    topRatedCount
-  };
+// Get aggregated statistics
+async function getStats() {
+  return await fetchStats();
 }
 
+// Get a single restaurant by ID
 function getRestaurantById(id) {
   return restaurants.find(r => r.id === parseInt(id));
 }
 
-function getReviewsByRestaurantId(restaurantId) {
-  return reviews.filter(r => r.restaurantId === restaurantId);
+// Get all reviews for a restaurant
+async function getReviewsByRestaurantId(restaurantId) {
+  return await fetchReviews(restaurantId);
 }
 
-function getTopRatedRestaurants() {
-  return restaurants.sort((a, b) => b.rating - a.rating);
+// Get all dishes for a restaurant
+async function getDishesForRestaurant(restaurantId) {
+  try {
+    const response = await fetch(`${API_BASE}/dishes?placeId=${restaurantId}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const dishes = await response.json();
+    return dishes.map(d => d.name);
+  } catch (error) {
+    console.warn(`Failed to fetch dishes for restaurant ${restaurantId}:`, error);
+    const rest = getRestaurantById(restaurantId);
+    return rest ? rest.popularDishes : [];
+  }
+}
+
+// Get all amenities for a restaurant
+async function getAmenitiesForRestaurant(restaurantId) {
+  try {
+    const response = await fetch(`${API_BASE}/amenities?placeId=${restaurantId}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Failed to fetch amenities for restaurant ${restaurantId}:`, error);
+    const rest = getRestaurantById(restaurantId);
+    return rest ? rest.amenities : [];
+  }
+}
+
+// Get top-rated restaurants
+function getTopRatedRestaurants(limit = null) {
+  const sorted = [...restaurants].sort((a, b) => b.rating - a.rating);
+  return limit ? sorted.slice(0, limit) : sorted;
+}
+
+// Filter restaurants by criteria
+function filterRestaurantsByCriteria(criteria) {
+  return restaurants.filter(restaurant => {
+    if (criteria.cuisine && criteria.cuisine !== 'All' && restaurant.cuisine !== criteria.cuisine) return false;
+    if (criteria.priceRange && criteria.priceRange !== 'All' && restaurant.priceRange !== criteria.priceRange) return false;
+    if (criteria.minRating && restaurant.rating < criteria.minRating) return false;
+    if (criteria.openOnly && restaurant.status !== 'Open') return false;
+    return true;
+  });
 }
 
 // Export for use in other files
@@ -273,6 +187,11 @@ if (typeof module !== 'undefined' && module.exports) {
     getStats,
     getRestaurantById,
     getReviewsByRestaurantId,
-    getTopRatedRestaurants
+    getDishesForRestaurant,
+    getAmenitiesForRestaurant,
+    getTopRatedRestaurants,
+    filterRestaurantsByCriteria,
+    fetchRestaurants,
+    initializeData
   };
 }

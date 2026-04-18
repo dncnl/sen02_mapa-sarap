@@ -245,6 +245,10 @@ function setupFilters() {
   const updateResults = () => {
     const filtered = filterRestaurants();
     renderRestaurantGrid(filtered);
+    // Update map markers if map is visible
+    if (typeof updateMapMarkers === 'function') {
+      updateMapMarkers();
+    }
   };
 
   if (searchInput) {
