@@ -82,7 +82,7 @@
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
-    function renderRestaurantDetail() {
+    async function renderRestaurantDetail() {
       const restaurantId = getUrlParam('id');
       if (!restaurantId) {
         window.location.href = 'index.html';
@@ -95,7 +95,7 @@
         return;
       }
 
-      const isFavorited = storage.isFavorite(restaurant.id);
+      const isFavorited = await db.isFavorite(restaurant.id);
 
       // Render Header Image
       const detailHeader = document.getElementById('detail-header');
@@ -111,7 +111,7 @@
           <div>
             <h1 class="detail-title">${restaurant.name}</h1>
             <div class="star-rating" style="font-size: 1.5rem;">
-              ${renderStars(restaurant.rating)} ${restaurant.rating} (${restaurant.reviewCount} reviews)
+              ${renderStars(restaurant.rating)} <span class="rating-number">${restaurant.rating}</span> <span style="font-family: var(--font-main); font-size: 1rem; color: var(--muted-foreground)">(${restaurant.reviewCount} reviews)</span>
             </div>
           </div>
           <button class="btn btn-large ${isFavorited ? 'btn-primary' : 'btn-outline'}" 
@@ -174,14 +174,14 @@
       ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
 
       // Render Reviews
-      const restaurantReviews = getReviewsByRestaurantId(restaurant.id);
+      const restaurantReviews = await db.getReviews(restaurant.id);
       renderReviews(restaurantReviews);
     }
 
-    function submitReview(event) {
+    async function submitReview(event) {
       event.preventDefault();
 
-      const user = storage.getUser();
+      const user = await db.getUser();
       if (!user) {
         alert('Please login to submit a review');
         window.location.href = 'login.html';
@@ -192,11 +192,16 @@
       const comment = document.getElementById('review-comment').value;
       const rating = parseInt(document.getElementById('review-rating-input').value) || 5;
 
-      alert('Thank you for your review! (This is demo data and won\'t be saved)');
-      
+      await db.addReview({
+        restaurantId: parseInt(getUrlParam('id')),
+        userName: name,
+        comment: comment,
+        rating: rating
+      });
+
+      alert('Thank you for your review!');
       document.getElementById('review-form').reset();
-      const ratingSelector = document.getElementById('rating-selector');
-      ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
+      renderRestaurantDetail(); // Refresh list
     }
 
     document.addEventListener('DOMContentLoaded', renderRestaurantDetail);

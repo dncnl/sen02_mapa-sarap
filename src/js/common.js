@@ -31,7 +31,7 @@ const pagePaths = (() => {
 // LOCAL STORAGE MANAGEMENT
 // ============================================
 
-const storage = {
+const db = {
   getFavorites() {
     const favorites = localStorage.getItem('mapa-favorites');
     return favorites ? JSON.parse(favorites) : [];
@@ -98,8 +98,8 @@ function setupHeader() {
   updateHeaderAuth();
 }
 
-function updateHeaderAuth() {
-  const user = storage.getUser();
+async function updateHeaderAuth() {
+  const user = await db.getUser();
   const authContainer = document.querySelector('.header-actions');
 
   if (!authContainer) return;
@@ -120,8 +120,8 @@ function updateHeaderAuth() {
   authContainer.innerHTML = html;
 }
 
-function logout() {
-  storage.logout();
+async function logout() {
+  await db.logout();
   updateHeaderAuth();
   window.location.href = pagePaths.homePath;
 }
@@ -143,8 +143,8 @@ function renderStars(rating) {
 // RESTAURANT CARD RENDERING
 // ============================================
 
-function createRestaurantCard(restaurant, onFavoriteClick = null) {
-  const isFavorited = storage.isFavorite(restaurant.id);
+async function createRestaurantCard(restaurant) {
+  const isFavorited = await db.isFavorite(restaurant.id);
   const statusClass = restaurant.status === 'Open' ? 'restaurant-badge' : 'restaurant-badge closed';
   const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e0e0e0' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3E🍽️ No Image%3C/text%3E%3C/svg%3E";
 
@@ -160,7 +160,7 @@ function createRestaurantCard(restaurant, onFavoriteClick = null) {
           </button>
         </div>
         <div class="restaurant-meta">
-          <span class="star-rating">${renderStars(restaurant.rating)} ${restaurant.rating}</span>
+          <span class="star-rating">${renderStars(restaurant.rating)} <span class="rating-number">${restaurant.rating}</span></span>
           <span>(${restaurant.reviewCount})</span>
           <span>${restaurant.priceRange}</span>
         </div>
@@ -171,19 +171,20 @@ function createRestaurantCard(restaurant, onFavoriteClick = null) {
   `;
 }
 
-function toggleFavorite(restaurantId, button) {
-  if (!storage.isLoggedIn()) {
+async function toggleFavorite(restaurantId, button) {
+  const user = await db.getUser();
+  if (!user) {
     alert('Please login to add favorites');
     window.location.href = pagePaths.loginPath;
     return;
   }
 
-  if (storage.isFavorite(restaurantId)) {
-    storage.removeFavorite(restaurantId);
+  if (await db.isFavorite(restaurantId)) {
+    await db.removeFavorite(restaurantId);
     button.textContent = '♡';
     button.classList.remove('active');
   } else {
-    storage.saveFavorite(restaurantId);
+    await db.saveFavorite(restaurantId);
     button.textContent = '♥';
     button.classList.add('active');
   }
@@ -193,7 +194,7 @@ function toggleFavorite(restaurantId, button) {
 // RESTAURANT GRID
 // ============================================
 
-function renderRestaurantGrid(filteredRestaurants, containerId = 'restaurants-grid') {
+async function renderRestaurantGrid(filteredRestaurants, containerId = 'restaurants-grid') {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -206,9 +207,8 @@ function renderRestaurantGrid(filteredRestaurants, containerId = 'restaurants-gr
     return;
   }
 
-  container.innerHTML = filteredRestaurants
-    .map(restaurant => createRestaurantCard(restaurant))
-    .join('');
+  const cards = await Promise.all(filteredRestaurants.map(r => createRestaurantCard(r)));
+  container.innerHTML = cards.join('');
 }
 
 // ============================================

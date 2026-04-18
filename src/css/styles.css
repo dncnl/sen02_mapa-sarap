@@ -3,6 +3,8 @@
    Warm Minimalism with Terracotta Heritage
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=League+Spartan:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+
 :root {
   /* Primary Colors */
   --primary: #C1440E;
@@ -27,6 +29,11 @@
 
   /* Border & Radius */
   --radius: 0.75rem;
+
+  /* Typography */
+  --font-main: 'Poppins', sans-serif;
+  --font-title: 'League Spartan', sans-serif;
+  --font-display: 'Cherry Bomb One', cursive;
 }
 
 /* ============================================
@@ -45,7 +52,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-main);
   background-color: var(--background);
   color: var(--foreground);
   line-height: 1.6;
@@ -54,6 +61,15 @@ body {
 /* ============================================
    LAYOUT & UTILITIES
    ============================================ */
+
+h1, h2, h3, .detail-title, .form-title, .empty-state-title, .stat-label, .filter-label, .detail-meta-label {
+  font-family: var(--font-title);
+  letter-spacing: -0.02em;
+}
+
+.logo, .rating-number, .stat-value, .rank-badge {
+  font-family: var(--font-display);
+}
 
 .container {
   max-width: 1200px;
@@ -161,15 +177,14 @@ header .container {
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.125rem;
 }
 
 .logo-text {
-  font-family: Georgia, serif;
   font-weight: bold;
   font-size: 1.25rem;
-  color: var(--foreground);
+  font-family: var(--font-display);
   display: none;
 }
 
@@ -239,6 +254,47 @@ nav a:hover {
   align-items: center;
 }
 
+/* Mobile App Bottom Nav */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.mobile-nav-item svg {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 2px;
+}
+
+.mobile-nav-item.active {
+  color: var(--primary);
+}
+
+@media (max-width: 767px) {
+  .mobile-nav { display: flex; }
+  body { padding-bottom: 80px; } /* Space for bottom nav */
+}
+
 /* ============================================
    BUTTONS & INPUTS
    ============================================ */
@@ -306,6 +362,8 @@ input, textarea, select {
   background-color: var(--input);
   color: var(--foreground);
   font-family: inherit;
+  /* Prevents iOS zoom on focus */
+  font-size: 16px;
   font-size: 1rem;
   transition: border-color 0.3s;
 }
@@ -460,7 +518,7 @@ input:focus, textarea:focus, select:focus {
 
 .hero-content h1 {
   font-size: clamp(2rem, 5vw, 3rem);
-  font-family: Georgia, serif;
+  font-family: var(--font-title);
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
@@ -504,8 +562,12 @@ input:focus, textarea:focus, select:focus {
 .stat-label {
   font-size: 0.875rem;
   color: var(--muted-foreground);
-  text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.stat-card.placeholder {
+  border: 1px dashed var(--border);
+  opacity: 0.7;
 }
 
 /* ============================================
@@ -628,7 +690,6 @@ input:focus, textarea:focus, select:focus {
 
 .detail-meta-label {
   font-size: 0.75rem;
-  text-transform: uppercase;
   color: var(--muted-foreground);
   letter-spacing: 0.05em;
   font-weight: 600;

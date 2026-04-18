@@ -11,7 +11,7 @@
   <header>
     <div class="container">
       <div class="header-content">
-        <a href="../../public/index.html" class="logo">
+        <a href="../../index.html" class="logo">
           <div class="logo-icon">M</div>
           <span class="logo-text">MAPA-Sarap</span>
         </a>
@@ -19,7 +19,7 @@
         <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
 
         <nav>
-          <a href="../../public/index.html">Discover</a>
+          <a href="../../index.html">Discover</a>
           <a href="leaderboard.html">Leaderboard</a>
           <a href="favorites.html">Favorites</a>
         </nav>
@@ -73,15 +73,15 @@
           <h3>Account Information</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Full Name</div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Full Name</div>
               <div style="font-weight: 600;">${user.name}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Email</div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Email</div>
               <div style="font-weight: 600;">${user.email}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Member Since</div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Member Since</div>
               <div style="font-weight: 600;">${new Date().toLocaleDateString()}</div>
             </div>
           </div>
@@ -91,11 +91,11 @@
           <h3>Activity</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Favorites</div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Favorites</div>
               <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">${favorites.length}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Reviews</div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Reviews</div>
               <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">0</div>
             </div>
           </div>
