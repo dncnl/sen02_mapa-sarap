@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+.env
+.env.local
+.env.*.local
+
+# OS
+Thumbs.db
+.DS_Store
+*.log
+
+# Development server
+.http-server-cwd/.liveserve
+
+# Compiled/minified files (if any build process is added)
+src/**/*.min.js
+src/**/*.min.css
+
+# Cache files
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+
+# Backups
+*.bak
+*.backup
+*~

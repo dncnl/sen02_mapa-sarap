@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAPA-Sarap - Discover Amazing Food</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="../src/css/styles.css">
+  
+  <!-- Leaflet Map (Free, No API Key) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">M</div>
+          <span class="logo-text">MAPA-Sarap</span>
+        </a>
+
+        <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+        <nav>
+          <a href="index.html">Discover</a>
+          <a href="../src/pages/leaderboard.html">Leaderboard</a>
+          <a href="../src/pages/favorites.html">Favorites</a>
+        </nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663567872441/SZpweG627JTbEEmfPVqiqm/hero-home-nq4NFeNs4Y25ey2sZ6LeXg.webp" alt="Hero Banner">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <h1>Discover Amazing Food</h1>
+        <p>Find the best restaurants near AUF</p>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <!-- STATS SECTION -->
+    <section class="container py-12">
+      <div class="stats-grid" id="stats-grid"></div>
+    </section>
+
+    <!-- SEARCH & FILTER SECTION -->
+    <section class="container py-8">
+      <div class="search-bar">
+        <div class="search-input">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search restaurants or cuisine..."
+            autocomplete="off"
+          >
+        </div>
+      </div>
+
+      <!-- VIEW TOGGLE BUTTONS -->
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <button id="grid-view-btn" class="view-toggle-btn active" onclick="switchView('grid')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+          </svg>
+          Grid
+        </button>
+        <button id="map-view-btn" class="view-toggle-btn" onclick="switchView('map')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          Map
+        </button>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Cuisine</label>
+          <select id="cuisine-filter">
+            <option value="All">All Cuisines</option>
+            <option value="Filipino">Filipino</option>
+            <option value="Korean BBQ">Korean BBQ</option>
+            <option value="Italian">Italian</option>
+            <option value="American">American</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Café">Café</option>
+            <option value="Thai">Thai</option>
+            <option value="Middle Eastern">Middle Eastern</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Price Range</label>
+          <select id="price-filter">
+            <option value="All">All Prices</option>
+            <option value="$">$ - Budget</option>
+            <option value="$$">$$ - Moderate</option>
+            <option value="$$$">$$$ - Premium</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Min Rating</label>
+          <select id="rating-filter">
+            <option value="0">All Ratings</option>
+            <option value="4">4.0+ ⭐</option>
+            <option value="4.5">4.5+ ⭐</option>
+            <option value="4.7">4.7+ ⭐</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">&nbsp;</label>
+          <label class="filter-checkbox">
+            <input type="checkbox" id="open-only-filter">
+            <span>Open Now</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESTAURANTS GRID VIEW -->
+    <section class="container py-8 mb-8" id="grid-section">
+      <div class="grid-restaurants" id="restaurants-grid"></div>
+    </section>
+
+    <!-- RESTAURANTS MAP VIEW -->
+    <section class="container py-8 mb-8" id="map-section" style="display: none;">
+      <div class="map-container">
+        <div id="map" style="width: 100%; height: 600px; border-radius: 0.75rem; border: 1px solid var(--border);"></div>
+      </div>
+      <div style="margin-top: 1.5rem; padding: 1.5rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;">
+        <h3 style="margin-bottom: 1rem; font-weight: 600;">Restaurants on Map</h3>
+        <div id="map-legend" class="grid-restaurants"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 MAPA-Sarap. All rights reserved. | Discover amazing restaurants near you.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../src/js/data.js"></script>
+  <script src="../src/js/common.js"></script>
+  
+  <script>
+    // ===== MAP STATE =====
+    let map = null;
+    let markersLayer = null;
+    let currentView = 'grid';
+    let currentFiltered = [];
+
+    // ===== VIEW SWITCHING =====
+    function switchView(view) {
+      currentView = view;
+      const gridSection = document.getElementById('grid-section');
+      const mapSection = document.getElementById('map-section');
+      const gridBtn = document.getElementById('grid-view-btn');
+      const mapBtn = document.getElementById('map-view-btn');
+
+      if (view === 'grid') {
+        gridSection.style.display = 'block';
+        mapSection.style.display = 'none';
+        gridBtn.classList.add('active');
+        mapBtn.classList.remove('active');
+      } else {
+        gridSection.style.display = 'none';
+        mapSection.style.display = 'block';
+        gridBtn.classList.remove('active');
+        mapBtn.classList.add('active');
+        
+        // Initialize Leaflet map
+        setTimeout(() => {
+          initializeMap();
+          renderMapMarkers(currentFiltered);
+        }, 100);
+      }
+    }
+
+    // ===== LEAFLET MAP (FREE, NO API KEY) =====
+    function initializeMap() {
+      if (map) {
+        // Map already exists, just refresh size
+        setTimeout(() => map.invalidateSize(), 50);
+        return;
+      }
+
+      // Center of Angeles City
+      const centerLat = 15.135;
+      const centerLng = 120.593;
+
+      // Create map
+      map = L.map('map').setView([centerLat, centerLng], 15);
+
+      // Add OpenStreetMap tiles (free!)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Create a layer group for markers
+      markersLayer = L.layerGroup().addTo(map);
+    }
+
+    function renderMapMarkers(filteredRestaurants) {
+      if (!map) {
+        initializeMap();
+      }
+
+      // Clear old markers
+      markersLayer.clearLayers();
+
+      if (filteredRestaurants.length === 0) return;
+
+      const bounds = L.latLngBounds();
+
+      filteredRestaurants.forEach((restaurant, index) => {
+        // Custom marker with number
+        const markerHtml = `
+          <div style="background-color: #C1440E; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;">
+            ${index + 1}
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          html: markerHtml,
+          className: 'custom-marker',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16]
+        });
+
+        const marker = L.marker([restaurant.lat, restaurant.lng], { icon: icon });
+
+        // Popup content
+        const popupContent = `
+          <div style="font-family: 'DM Sans', sans-serif; min-width: 220px;">
+            <h4 style="margin: 0 0 8px 0; font-family: 'Playfair Display', serif; color: #C1440E; font-size: 16px;">${restaurant.name}</h4>
+            <p style="margin: 4px 0; color: #666; font-size: 13px;">🍽️ ${restaurant.cuisine}</p>
+            <p style="margin: 4px 0; color: #F5A623; font-size: 13px;">⭐ ${restaurant.rating} (${restaurant.reviewCount} reviews)</p>
+            <p style="margin: 4px 0; color: #666; font-size: 12px;">📍 ${restaurant.address}</p>
+            <p style="margin: 10px 0 0 0;">
+              <a href="../src/pages/restaurant-detail.html?id=${restaurant.id}" style="color: #C1440E; text-decoration: none; font-weight: 600; font-size: 13px;">View Details →</a>
+            </p>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        markersLayer.addLayer(marker);
+        bounds.extend([restaurant.lat, restaurant.lng]);
+      });
+
+      // Fit map to show all markers
+      if (filteredRestaurants.length > 0) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+
+      // Update legend (restaurant cards below map)
+      const legendContainer = document.getElementById('map-legend');
+      if (legendContainer) {
+        legendContainer.innerHTML = filteredRestaurants
+          .map(restaurant => createRestaurantCard(restaurant))
+          .join('');
+      }
+    }
+
+    // ===== STATS =====
+    function renderStats() {
+      const stats = getStats();
+      const statsGrid = document.getElementById('stats-grid');
+      
+      statsGrid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalRestaurants}</div>
+          <div class="stat-label">Restaurants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.avgRating}</div>
+          <div class="stat-label">Avg Rating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.totalReviews}</div>
+          <div class="stat-label">Total Reviews</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${stats.topRatedCount}</div>
+          <div class="stat-label">Top Rated (4.7+)</div>
+        </div>
+      `;
+    }
+
+    // ===== FILTER UPDATE =====
+    function updateViewAfterFilter() {
+      currentFiltered = filterRestaurants();
+      
+      if (currentView === 'grid') {
+        renderRestaurantGrid(currentFiltered);
+      } else {
+        renderMapMarkers(currentFiltered);
+      }
+    }
+
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', () => {
+      renderStats();
+      setupFilters();
+      
+      const searchInput = document.getElementById('search-input');
+      const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter'];
+
+      const updateResults = () => {
+        updateViewAfterFilter();
+      };
+
+      if (searchInput) {
+        searchInput.addEventListener('input', updateResults);
+      }
+
+      filters.forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element) {
+          element.addEventListener('change', updateResults);
+        }
+      });
+
+      // Initial render
+      updateViewAfterFilter();
+    });
+  </script>
+</body>
+</html>

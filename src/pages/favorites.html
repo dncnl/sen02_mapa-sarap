@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favorites - MAPA-Sarap</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../../public/index.html" class="logo">
+          <div class="logo-icon">M</div>
+          <span class="logo-text">MAPA-Sarap</span>
+        </a>
+
+        <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+        <nav>
+          <a href="../../public/index.html">Discover</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="favorites.html">Favorites</a>
+        </nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container py-12">
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2.25rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--foreground);">
+          My Favorites
+        </h1>
+        <p style="color: var(--muted-foreground); font-size: 1.125rem;">
+          Your saved restaurants and bookmarks
+        </p>
+      </div>
+
+      <div id="favorites-content"></div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+  </footer>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/common.js"></script>
+  <script>
+    function renderFavorites() {
+      const user = storage.getUser();
+      const favoritesContent = document.getElementById('favorites-content');
+
+      if (!user) {
+        favoritesContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔒</div>
+            <div class="empty-state-title">Login to View Favorites</div>
+            <p class="empty-state-text">Sign in to your account to save and view your favorite restaurants.</p>
+            <a href="auth/login.html" class="btn btn-primary">Go to Login</a>
+          </div>
+        `;
+        return;
+      }
+
+      const favorites = storage.getFavorites();
+
+      if (favorites.length === 0) {
+        favoritesContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">♡</div>
+            <div class="empty-state-title">No Favorites Yet</div>
+            <p class="empty-state-text">Start exploring restaurants and add your favorites to save them for later.</p>
+            <a href="../../public/index.html" class="btn btn-primary">Explore Restaurants</a>
+          </div>
+        `;
+        return;
+      }
+
+      const favoriteRestaurants = favorites
+        .map(id => getRestaurantById(id))
+        .filter(r => r !== undefined);
+
+      if (favoriteRestaurants.length === 0) {
+        favoritesContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">♡</div>
+            <div class="empty-state-title">No Favorites Yet</div>
+            <p class="empty-state-text">Start exploring restaurants and add your favorites to save them for later.</p>
+            <a href="../../public/index.html" class="btn btn-primary">Explore Restaurants</a>
+          </div>
+        `;
+        return;
+      }
+
+      const html = `
+        <div class="grid-restaurants">
+          ${favoriteRestaurants.map(restaurant => createRestaurantCard(restaurant)).join('')}
+        </div>
+      `;
+
+      favoritesContent.innerHTML = html;
+    }
+
+    document.addEventListener('DOMContentLoaded', renderFavorites);
+  </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MAPA-Sarap</title>
+  <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../../../public/index.html" class="logo">
+          <div class="logo-icon">M</div>
+          <span class="logo-text">MAPA-Sarap</span>
+        </a>
+
+        <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+        <nav>
+          <a href="../../../public/index.html">Discover</a>
+          <a href="../leaderboard.html">Leaderboard</a>
+          <a href="../favorites.html">Favorites</a>
+        </nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="form-container">
+      <h2 class="form-title">Welcome Back</h2>
+
+      <div id="login-form">
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="login-name">Full Name</label>
+            <input type="text" id="login-name" required placeholder="Enter your full name">
+            <div class="form-error" id="name-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" required placeholder="Enter your email">
+            <div class="form-error" id="email-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required placeholder="Enter your password (min. 6 characters)">
+            <div class="form-error" id="password-error"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Login</button>
+        </form>
+
+        <div class="form-footer">
+          <p>Don't have an account? <a href="#" onclick="toggleForm(event)">Create one</a></p>
+        </div>
+      </div>
+
+      <div id="register-form" style="display: none;">
+        <form onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label for="register-name">Full Name</label>
+            <input type="text" id="register-name" required placeholder="Enter your full name">
+            <div class="form-error" id="reg-name-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="register-email">Email Address</label>
+            <input type="email" id="register-email" required placeholder="Enter your email">
+            <div class="form-error" id="reg-email-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" required placeholder="Create a password (min. 6 characters)">
+            <div class="form-error" id="reg-password-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="register-confirm">Confirm Password</label>
+            <input type="password" id="register-confirm" required placeholder="Confirm your password">
+            <div class="form-error" id="reg-confirm-error"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Create Account</button>
+        </form>
+
+        <div class="form-footer">
+          <p>Already have an account? <a href="#" onclick="toggleForm(event)">Login here</a></p>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">
+        <p>Demo Credentials:</p>
+        <p>Email: demo@example.com | Password: demo123</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+  </footer>
+
+  <script src="../../js/data.js"></script>
+  <script src="../../js/common.js"></script>
+  <script>
+    function toggleForm(event) {
+      event.preventDefault();
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+
+      if (loginForm.style.display === 'none') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+      }
+
+      // Clear errors
+      document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    }
+
+    function clearErrors(prefix = '') {
+      const fields = prefix ? ['name', 'email', 'password'] : ['name', 'email', 'password', 'confirm'];
+      fields.forEach(field => {
+        const errorEl = document.getElementById(`${prefix}${field}-error`);
+        if (errorEl) errorEl.textContent = '';
+      });
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      clearErrors('');
+
+      const name = document.getElementById('login-name').value.trim();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+
+      const errors = validateForm({ name, email, password });
+
+      if (Object.keys(errors).length > 0) {
+        Object.keys(errors).forEach(key => {
+          const errorEl = document.getElementById(`${key}-error`);
+          if (errorEl) errorEl.textContent = errors[key];
+        });
+        return;
+      }
+
+      // Save user to localStorage
+      const user = { name, email };
+      storage.saveUser(user);
+
+      alert(`Welcome, ${name}! You have been logged in.`);
+      window.location.href = 'index.html';
+    }
+
+    function handleRegister(event) {
+      event.preventDefault();
+      clearErrors('reg-');
+
+      const name = document.getElementById('register-name').value.trim();
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value.trim();
+      const confirm = document.getElementById('register-confirm').value.trim();
+
+      const errors = validateForm({ name, email, password });
+
+      if (password !== confirm) {
+        errors.confirm = 'Passwords do not match';
+      }
+
+      if (Object.keys(errors).length > 0) {
+        Object.keys(errors).forEach(key => {
+          const errorEl = document.getElementById(`reg-${key}-error`);
+          if (errorEl) errorEl.textContent = errors[key];
+        });
+        return;
+      }
+
+      // Save user to localStorage
+      const user = { name, email };
+      storage.saveUser(user);
+
+      alert(`Account created successfully! Welcome, ${name}!`);
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

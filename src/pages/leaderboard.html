@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - MAPA-Sarap</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../../public/index.html" class="logo">
+          <div class="logo-icon">M</div>
+          <span class="logo-text">MAPA-Sarap</span>
+        </a>
+
+        <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+        <nav>
+          <a href="../../public/index.html">Discover</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="favorites.html">Favorites</a>
+        </nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container py-12">
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2.25rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--foreground);">
+          Top Rated Restaurants
+        </h1>
+        <p style="color: var(--muted-foreground); font-size: 1.125rem;">
+          Discover the best-rated restaurants in our community
+        </p>
+      </div>
+
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th style="width: 80px;">Rank</th>
+            <th>Restaurant</th>
+            <th style="width: 120px;">Cuisine</th>
+            <th style="width: 100px;">Rating</th>
+            <th style="width: 120px;">Reviews</th>
+            <th style="width: 100px;">Price</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+  </footer>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/common.js"></script>
+  <script>
+    function renderLeaderboard() {
+      const topRated = getTopRatedRestaurants();
+      const tbody = document.getElementById('leaderboard-body');
+
+      tbody.innerHTML = topRated.map((restaurant, index) => {
+        const rankClass = index < 3 ? 'top-3' : '';
+        return `
+          <tr style="cursor: pointer;" onclick="window.location.href='restaurant-detail.html?id=${restaurant.id}'">
+            <td>
+              <span class="rank-badge ${rankClass}">${index + 1}</span>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: var(--foreground);">
+                ${restaurant.name}
+              </div>
+              <div style="font-size: 0.875rem; color: var(--muted-foreground);">
+                ${restaurant.address}
+              </div>
+            </td>
+            <td>${restaurant.cuisine}</td>
+            <td>
+              <div style="color: var(--primary); font-weight: 600;">
+                ${renderStars(restaurant.rating)} ${restaurant.rating}
+              </div>
+            </td>
+            <td>${restaurant.reviewCount}</td>
+            <td>${restaurant.priceRange}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderLeaderboard);
+  </script>
+</body>
+</html>

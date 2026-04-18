@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Details - MAPA-Sarap</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="../../public/index.html" class="logo">
+          <div class="logo-icon">M</div>
+          <span class="logo-text">MAPA-Sarap</span>
+        </a>
+
+        <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+        <nav>
+          <a href="../../public/index.html">Discover</a>
+          <a href="leaderboard.html">Leaderboard</a>
+          <a href="favorites.html">Favorites</a>
+        </nav>
+
+        <div class="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="detail-header" id="detail-header"></div>
+
+    <div class="container py-8">
+      <!-- Back Button -->
+      <a href="../../public/index.html" class="btn btn-outline btn-small" style="margin-bottom: 1.5rem;">← Back</a>
+
+      <!-- Restaurant Info -->
+      <div class="detail-info" id="detail-info"></div>
+
+      <!-- Description & Details -->
+      <div class="detail-description" id="detail-description"></div>
+
+      <!-- Reviews Section -->
+      <section class="reviews-section">
+        <h3>Reviews</h3>
+
+        <!-- Review Form -->
+        <form class="review-form" id="review-form" onsubmit="submitReview(event)">
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">Add a Review</h4>
+          
+          <div class="form-group">
+            <label>Your Rating</label>
+            <div id="rating-selector"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="review-name">Your Name</label>
+            <input type="text" id="review-name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="review-comment">Your Comment</label>
+            <textarea id="review-comment" placeholder="Share your experience..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+
+        <!-- Reviews List -->
+        <div class="review-list" id="reviews-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+  </footer>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/common.js"></script>
+  <script>
+    function renderRestaurantDetail() {
+      const restaurantId = getUrlParam('id');
+      if (!restaurantId) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const restaurant = getRestaurantById(restaurantId);
+      if (!restaurant) {
+        window.location.href = '404.html';
+        return;
+      }
+
+      const isFavorited = storage.isFavorite(restaurant.id);
+
+      // Render Header Image
+      const detailHeader = document.getElementById('detail-header');
+      const placeholderSVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23e0e0e0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EImage Not Available%3C/text%3E%3C/svg%3E';
+      detailHeader.innerHTML = `
+        <img src="${restaurant.imageUrl}" alt="${restaurant.name}" class="detail-image" onerror="this.src='${placeholderSVG}'">
+      `;
+
+      // Render Restaurant Info
+      const detailInfo = document.getElementById('detail-info');
+      detailInfo.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 2rem;">
+          <div>
+            <h1 class="detail-title">${restaurant.name}</h1>
+            <div class="star-rating" style="font-size: 1.5rem;">
+              ${renderStars(restaurant.rating)} ${restaurant.rating} (${restaurant.reviewCount} reviews)
+            </div>
+          </div>
+          <button class="btn btn-large ${isFavorited ? 'btn-primary' : 'btn-outline'}" 
+                  onclick="toggleFavorite(${restaurant.id}, this); event.target.classList.toggle('btn-primary'); event.target.classList.toggle('btn-outline');">
+            ${isFavorited ? '♥ Favorited' : '♡ Add to Favorites'}
+          </button>
+        </div>
+
+        <div class="detail-meta">
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Cuisine</span>
+            <span class="detail-meta-value">${restaurant.cuisine}</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Price Range</span>
+            <span class="detail-meta-value">${restaurant.priceRange}</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Status</span>
+            <span class="detail-meta-value" style="color: ${restaurant.status === 'Open' ? 'var(--success)' : 'var(--error)'}">${restaurant.status}</span>
+          </div>
+          <div class="detail-meta-item">
+            <span class="detail-meta-label">Distance</span>
+            <span class="detail-meta-value">${restaurant.distance}</span>
+          </div>
+        </div>
+      `;
+
+      // Render Description & Details
+      const detailDescription = document.getElementById('detail-description');
+      const amenitiesHtml = restaurant.amenities.map(a => `<span class="amenity-badge">${a}</span>`).join('');
+      const dishesHtml = restaurant.popularDishes.map(d => `<span class="dish-badge">${d}</span>`).join('');
+
+      detailDescription.innerHTML = `
+        <div>
+          <h3>About</h3>
+          <p>${restaurant.description}</p>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem;">Contact Information</h3>
+          <p><strong>Address:</strong> ${restaurant.address}</p>
+          <p><strong>Phone:</strong> ${restaurant.phone}</p>
+          <p><strong>Hours:</strong> ${restaurant.hours}</p>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem;">Popular Dishes</h3>
+          <div class="popular-dishes">${dishesHtml}</div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem;">Amenities</h3>
+          <div class="amenities-list">${amenitiesHtml}</div>
+        </div>
+      `;
+
+      // Render Rating Selector
+      const ratingSelector = document.getElementById('rating-selector');
+      ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
+
+      // Render Reviews
+      const restaurantReviews = getReviewsByRestaurantId(restaurant.id);
+      renderReviews(restaurantReviews);
+    }
+
+    function submitReview(event) {
+      event.preventDefault();
+
+      const user = storage.getUser();
+      if (!user) {
+        alert('Please login to submit a review');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const name = document.getElementById('review-name').value;
+      const comment = document.getElementById('review-comment').value;
+      const rating = parseInt(document.getElementById('review-rating-input').value) || 5;
+
+      alert('Thank you for your review! (This is demo data and won\'t be saved)');
+      
+      document.getElementById('review-form').reset();
+      const ratingSelector = document.getElementById('rating-selector');
+      ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
+    }
+
+    document.addEventListener('DOMContentLoaded', renderRestaurantDetail);
+  </script>
+</body>
+</html>
