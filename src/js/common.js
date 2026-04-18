@@ -10,20 +10,20 @@
 const pagePaths = (() => {
   const currentPage = window.location.pathname;
   
-  // Determine if we're in auth folder, pages folder, or public
+  // Determine location based on directory structure
   const isAuthPage = currentPage.includes('/auth/');
-  const isPageFile = currentPage.includes('/src/pages/');
-  const isPublicPage = currentPage.includes('/public/');
+  const isPageFile = currentPage.includes('/pages/') && !isAuthPage;
+  const isRoot = !isAuthPage && !isPageFile;
   
   return {
     // For login link - works from all pages
-    loginPath: isAuthPage ? 'login.html' : (isPageFile ? 'auth/login.html' : '../src/pages/auth/login.html'),
+    loginPath: isRoot ? 'src/pages/auth/login.html' : (isPageFile ? 'auth/login.html' : 'login.html'),
     // For restaurant detail - works from pages directory
-    detailPath: isPageFile || isAuthPage ? 'restaurant-detail.html' : '../src/pages/restaurant-detail.html',
-    // For home redirect - always go to public/index.html
-    homePath: isPublicPage ? 'index.html' : (isPageFile || isAuthPage ? '../../public/index.html' : 'public/index.html'),
+    detailPath: isRoot ? 'src/pages/restaurant-detail.html' : (isPageFile || isAuthPage ? 'restaurant-detail.html' : '../restaurant-detail.html'),
+    // For home redirect
+    homePath: isRoot ? 'index.html' : (isPageFile ? '../../index.html' : '../../../index.html'),
     // For profile page
-    profilePath: isPageFile || isAuthPage ? 'profile.html' : '../src/pages/profile.html'
+    profilePath: isRoot ? 'src/pages/profile.html' : (isPageFile || isAuthPage ? 'profile.html' : '../profile.html')
   };
 })();
 
