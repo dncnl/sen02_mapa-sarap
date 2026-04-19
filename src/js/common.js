@@ -442,6 +442,9 @@ function validateForm(formData) {
 // ============================================
 
 function createReviewItem(review) {
+  const hasHelpfulVote = localStorage.getItem(`mapa-helpful-review-${review.id}`) === 'true';
+  const helpfulCount = Number(review.helpfulCount || 0);
+
   return `
     <div class="review-item">
       <div class="review-header">
@@ -452,7 +455,13 @@ function createReviewItem(review) {
       </div>
       <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
       <div class="review-text">${review.comment}</div>
-      <div class="review-helpful">👍 ${review.helpfulCount} found this helpful</div>
+      <button type="button"
+              class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
+              data-review-id="${review.id}"
+              onclick="markReviewHelpful(${review.id}, event)"
+              ${hasHelpfulVote ? 'disabled' : ''}>
+        👍 <span class="review-helpful-count">${helpfulCount}</span> found this helpful
+      </button>
     </div>
   `;
 }
@@ -467,6 +476,44 @@ function renderReviews(reviews, containerId = 'reviews-list') {
   }
 
   container.innerHTML = reviews.map(review => createReviewItem(review)).join('');
+}
+
+async function markReviewHelpful(reviewId, event) {
+  const button = event?.currentTarget || event?.target;
+
+  if (!button) return;
+
+  if (button.disabled) return;
+
+  const user = await db.getUser();
+  if (!user) {
+    alert('Please login to mark a review as helpful');
+    window.location.href = pagePaths.loginPath;
+    return;
+  }
+
+  const token = db.getToken();
+  if (!token) {
+    alert('Please login again to continue.');
+    window.location.href = pagePaths.loginPath;
+    return;
+  }
+
+  try {
+    const payload = await submitHelpfulVote(reviewId, token);
+    localStorage.setItem(`mapa-helpful-review-${reviewId}`, 'true');
+    button.disabled = true;
+    button.classList.add('voted');
+    const countEl = button.querySelector('.review-helpful-count');
+    if (countEl) {
+      countEl.textContent = payload.helpfulCount;
+    }
+    if (payload.alreadyMarked) {
+      button.title = 'You already marked this review as helpful';
+    }
+  } catch (error) {
+    alert(error.message || 'Failed to mark review as helpful');
+  }
 }
 
 // ============================================
