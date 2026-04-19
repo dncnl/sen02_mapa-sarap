@@ -161,6 +161,28 @@ async function getAmenitiesForRestaurant(restaurantId) {
   }
 }
 
+async function createReviewForRestaurant(restaurantId, comment, rating, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      placeId: restaurantId,
+      comment,
+      rating,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to create review');
+  }
+
+  return payload;
+}
+
 // Get top-rated restaurants
 function getTopRatedRestaurants(limit = null) {
   const sorted = [...restaurants].sort((a, b) => b.rating - a.rating);
@@ -189,6 +211,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getReviewsByRestaurantId,
     getDishesForRestaurant,
     getAmenitiesForRestaurant,
+    createReviewForRestaurant,
     getTopRatedRestaurants,
     filterRestaurantsByCriteria,
     fetchRestaurants,

@@ -64,8 +64,18 @@ const db = {
     localStorage.setItem('mapa-user', JSON.stringify(user));
   },
 
+  saveAuthSession(user, token) {
+    this.saveUser(user);
+    localStorage.setItem('mapa-token', token);
+  },
+
+  getToken() {
+    return localStorage.getItem('mapa-token');
+  },
+
   logout() {
     localStorage.removeItem('mapa-user');
+    localStorage.removeItem('mapa-token');
   },
 
   isLoggedIn() {
@@ -108,7 +118,7 @@ async function updateHeaderAuth() {
 
   if (user) {
     html = `
-      <span class="text-sm text-muted-foreground">Hello, ${user.name}!</span>
+      <span class="text-sm text-muted-foreground">Hello, ${user.name || user.username || 'User'}!</span>
       <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
     `;
   } else {

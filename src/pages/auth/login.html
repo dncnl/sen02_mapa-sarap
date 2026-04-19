@@ -139,11 +139,21 @@
       event.preventDefault();
       clearErrors('');
 
-      const name = document.getElementById('login-name').value.trim();
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value.trim();
 
-      const errors = validateForm({ name, email, password });
+      const errors = {};
+      if (!email) {
+        errors.email = 'Email is required';
+      } else if (!validateEmail(email)) {
+        errors.email = 'Invalid email format';
+      }
+
+      if (!password) {
+        errors.password = 'Password is required';
+      } else if (password.length < 6) {
+        errors.password = 'Password must be at least 6 characters';
+      }
 
       if (Object.keys(errors).length > 0) {
         Object.keys(errors).forEach(key => {
@@ -153,12 +163,23 @@
         return;
       }
 
-      // Save user to localStorage
-      const user = { name, email };
-      storage.saveUser(user);
+      fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+        .then(async (response) => {
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Login failed');
 
-      alert(`Welcome, ${name}! You have been logged in.`);
-      window.location.href = 'index.html';
+          db.saveAuthSession(payload.user, payload.token);
+          alert(`Welcome, ${payload.user.name || payload.user.username}! You have been logged in.`);
+          window.location.href = '../../../index.html';
+        })
+        .catch((error) => {
+          const errorEl = document.getElementById('password-error');
+          if (errorEl) errorEl.textContent = error.message;
+        });
     }
 
     function handleRegister(event) {
@@ -184,12 +205,23 @@
         return;
       }
 
-      // Save user to localStorage
-      const user = { name, email };
-      storage.saveUser(user);
+      fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      })
+        .then(async (response) => {
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Registration failed');
 
-      alert(`Account created successfully! Welcome, ${name}!`);
-      window.location.href = 'index.html';
+          db.saveAuthSession(payload.user, payload.token);
+          alert(`Account created successfully! Welcome, ${payload.user.name || payload.user.username}!`);
+          window.location.href = '../../../index.html';
+        })
+        .catch((error) => {
+          const errorEl = document.getElementById('reg-password-error');
+          if (errorEl) errorEl.textContent = error.message;
+        });
     }
   </script>
 </body>
