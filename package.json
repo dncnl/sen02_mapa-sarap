@@ -1,0 +1,25 @@
+{
+  "name": "mapa-sarap",
+  "version": "1.0.0",
+  "description": "MAPA-Sarap - Food Discovery App for Angeles University Foundation",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Building static assets'",
+    "start": "vercel dev"
+  },
+  "keywords": [
+    "food",
+    "discovery",
+    "restaurants",
+    "philippines"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": "24.x"
+  }
+}

@@ -72,7 +72,48 @@
       </div>
 
       <div class="filter-bar">
-        <!-- Filters same as before -->
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+          <!-- Cuisine Filter -->
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <label for="cuisine-filter" style="font-weight: 500; font-size: 0.875rem;">Cuisine</label>
+            <select id="cuisine-filter" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; background: white;">
+              <option value="All">All Cuisines</option>
+              <option value="Filipino Fast Food">Filipino Fast Food</option>
+              <option value="American Fast Food">American Fast Food</option>
+              <option value="Korean">Korean</option>
+              <option value="Wraps and Rice Meals">Wraps and Rice Meals</option>
+            </select>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <label for="price-filter" style="font-weight: 500; font-size: 0.875rem;">Price Range</label>
+            <select id="price-filter" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; background: white;">
+              <option value="All">All Prices</option>
+              <option value="$">$ (Budget)</option>
+              <option value="$$">$$ (Moderate)</option>
+              <option value="$$$">$$$ (Premium)</option>
+            </select>
+          </div>
+
+          <!-- Minimum Rating Filter -->
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <label for="rating-filter" style="font-weight: 500; font-size: 0.875rem;">Min Rating</label>
+            <select id="rating-filter" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; background: white;">
+              <option value="0">All Ratings</option>
+              <option value="3.0">3.0★ & up</option>
+              <option value="3.5">3.5★ & up</option>
+              <option value="4.0">4.0★ & up</option>
+              <option value="4.5">4.5★ & up</option>
+            </select>
+          </div>
+
+          <!-- Open Now Filter -->
+          <div style="display: flex; align-items: flex-end; gap: 0.5rem; height: 100%;">
+            <input type="checkbox" id="open-only-filter" style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+            <label for="open-only-filter" style="font-weight: 500; font-size: 0.875rem; cursor: pointer; user-select: none;">Open Now</label>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -111,8 +152,8 @@
     let map;
     let markers = [];
 
-    function renderStats() {
-      const stats = getStats();
+    async function renderStats() {
+      const stats = await getStats();
       const statsGrid = document.getElementById('stats-grid');
       if (!statsGrid) return;
       
@@ -153,7 +194,8 @@
         mapBtn.classList.add('active');
         
         if (!map) {
-          map = L.map('map').setView([15.1333, 120.5900], 14);
+          // Center on AUF area (average of seeded restaurant coordinates)
+          map = L.map('map').setView([15.1433, 120.5962], 15);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
           }).addTo(map);
@@ -174,15 +216,31 @@
 
       const filtered = filterRestaurants();
       filtered.forEach(r => {
+        const markerHtml = `
+          <b>${r.name}</b><br>
+          <span style="font-size: 0.875rem; color: #666;">
+            ${r.cuisine}<br>
+            ${renderStars(r.rating)} ${r.rating}/5 (${r.reviewCount} reviews)<br>
+            ${r.priceRange} • ${r.status}<br>
+            <a href="${pagePaths.detailPath}?id=${r.id}" style="color: var(--primary); text-decoration: none;">View Details →</a>
+          </span>
+        `;
         const marker = L.marker([r.lat, r.lng])
-          .bindPopup(`<b>${r.name}</b><br>${r.cuisine}<br><a href="${pagePaths.detailPath}?id=${r.id}">View Details</a>`)
+          .bindPopup(markerHtml)
           .addTo(map);
         markers.push(marker);
       });
+
+      // Auto-fit bounds if there are markers
+      if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      renderStats();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeData();
+      await renderStats();
       setupFilters();
     });
   </script>
