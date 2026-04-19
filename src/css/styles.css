@@ -176,13 +176,13 @@ header .container {
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: bold;
+  font-weight: normal;
   font-family: var(--font-display);
   font-size: 1.125rem;
 }
 
 .logo-text {
-  font-weight: bold;
+  font-weight: normal;
   font-size: 1.25rem;
   font-family: var(--font-display);
   display: none;
