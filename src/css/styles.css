@@ -839,6 +839,37 @@ input:focus, textarea:focus, select:focus {
   color: var(--muted-foreground);
 }
 
+.review-helpful-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.review-helpful-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.review-helpful-btn.voted,
+.review-helpful-btn:disabled {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  cursor: default;
+}
+
+.review-helpful-count {
+  font-weight: 600;
+}
+
 /* ============================================
    FORMS
    ============================================ */

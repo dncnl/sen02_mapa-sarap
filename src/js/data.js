@@ -183,9 +183,33 @@ async function createReviewForRestaurant(restaurantId, comment, rating, token) {
   return payload;
 }
 
+async function submitHelpfulVote(reviewId, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      reviewId,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to mark review as helpful');
+  }
+
+  return payload;
+}
+
 // Get top-rated restaurants
 function getTopRatedRestaurants(limit = null) {
-  const sorted = [...restaurants].sort((a, b) => b.rating - a.rating);
+  const sorted = [...restaurants].sort((a, b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating;
+    if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
+    return a.name.localeCompare(b.name);
+  });
   return limit ? sorted.slice(0, limit) : sorted;
 }
 
@@ -212,6 +236,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getDishesForRestaurant,
     getAmenitiesForRestaurant,
     createReviewForRestaurant,
+    submitHelpfulVote,
     getTopRatedRestaurants,
     filterRestaurantsByCriteria,
     fetchRestaurants,

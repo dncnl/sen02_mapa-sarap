@@ -1,7 +1,8 @@
 /**
  * API Endpoint: /api/reviews
- * GET  -> returns reviews for a specific restaurant
- * POST -> creates a review for an authenticated user
+ * GET    -> returns reviews for a specific restaurant
+ * POST   -> creates a review for an authenticated user
+ * PATCH  -> marks a review as helpful for an authenticated user
  */
 
 const { Client } = require('pg');
@@ -33,7 +34,7 @@ async function parseJsonBody(req) {
 }
 
 module.exports = async (req, res) => {
-  if (!['GET', 'POST'].includes(req.method)) {
+  if (!['GET', 'POST', 'PATCH'].includes(req.method)) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -81,6 +82,69 @@ module.exports = async (req, res) => {
       }));
 
       return res.status(200).json(reviews);
+    }
+
+    if (req.method === 'PATCH') {
+      const authUser = getAuthUser(req);
+      if (!authUser?.userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const body = await parseJsonBody(req);
+      const reviewId = parseInt(body.reviewId, 10);
+
+      if (!Number.isInteger(reviewId) || reviewId <= 0) {
+        return res.status(400).json({ error: 'Valid reviewId is required' });
+      }
+
+      const reviewResult = await client.query(
+        'SELECT id, helpful_count FROM reviews WHERE id = $1 LIMIT 1',
+        [reviewId]
+      );
+
+      if (reviewResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+
+      const currentHelpfulCount = parseInt(reviewResult.rows[0].helpful_count, 10) || 0;
+
+      await client.query('BEGIN');
+
+      try {
+        await client.query(
+          `INSERT INTO review_helpful_votes (review_id, user_id)
+           VALUES ($1, $2)`,
+          [reviewId, authUser.userId]
+        );
+
+        const updatedResult = await client.query(
+          `UPDATE reviews
+           SET helpful_count = helpful_count + 1
+           WHERE id = $1
+           RETURNING helpful_count`,
+          [reviewId]
+        );
+
+        await client.query('COMMIT');
+
+        return res.status(200).json({
+          reviewId,
+          helpfulCount: parseInt(updatedResult.rows[0].helpful_count, 10) || currentHelpfulCount + 1,
+          alreadyMarked: false,
+        });
+      } catch (error) {
+        await client.query('ROLLBACK');
+
+        if (error.code === '23505') {
+          return res.status(200).json({
+            reviewId,
+            helpfulCount: currentHelpfulCount,
+            alreadyMarked: true,
+          });
+        }
+
+        throw error;
+      }
     }
 
     const authUser = getAuthUser(req);

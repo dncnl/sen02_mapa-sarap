@@ -69,6 +69,19 @@
       const topRated = getTopRatedRestaurants();
       const tbody = document.getElementById('leaderboard-body');
 
+      if (!tbody) return;
+
+      if (!topRated.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--muted-foreground); padding: 2rem;">
+              No restaurants found.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
       tbody.innerHTML = topRated.map((restaurant, index) => {
         const rankClass = index < 3 ? 'top-3' : '';
         return `
@@ -97,7 +110,10 @@
       }).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', renderLeaderboard);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeData();
+      renderLeaderboard();
+    });
   </script>
 </body>
 </html>
