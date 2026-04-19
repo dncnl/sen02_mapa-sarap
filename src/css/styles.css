@@ -49,6 +49,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -74,7 +75,7 @@ h1, h2, h3, .detail-title, .form-title, .empty-state-title, .stat-label, .filter
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
 }
 
 .flex {
@@ -117,7 +118,7 @@ h1, h2, h3, .detail-title, .form-title, .empty-state-title, .stat-label, .filter
 .text-center { text-align: center; }
 .text-sm { font-size: 0.875rem; }
 .text-base { font-size: 1rem; }
-.text-lg { font-size: 1.125rem; }
+.text-lg { font-size: 1.125rem; } 
 .text-xl { font-size: 1.25rem; }
 .text-2xl { font-size: 1.5rem; }
 .text-3xl { font-size: 1.875rem; }
@@ -138,6 +139,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 40;
+  padding-top: env(safe-area-inset-top, 0px);
   background-color: var(--card);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -235,6 +237,7 @@ nav a:hover {
     right: 0;
     background-color: var(--card);
     flex-direction: column;
+    gap: 1rem;
     border-bottom: 1px solid var(--border);
     padding: 1rem;
   }
@@ -261,7 +264,7 @@ nav a:hover {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 65px;
+  height: calc(65px + env(safe-area-inset-bottom, 0px));
   background: var(--card);
   border-top: 1px solid var(--border);
   z-index: 50;
@@ -292,7 +295,7 @@ nav a:hover {
 
 @media (max-width: 767px) {
   .mobile-nav { display: flex; }
-  body { padding-bottom: 80px; } /* Space for bottom nav */
+  body { padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)); } /* Space for bottom nav */
 }
 
 /* ============================================
@@ -300,7 +303,8 @@ nav a:hover {
    ============================================ */
 
 button, .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem; /* Larger touch targets */
+  min-height: 44px; /* iOS standard for touch */
   border: none;
   border-radius: var(--radius);
   font-size: 0.875rem;
@@ -416,6 +420,11 @@ input:focus, textarea:focus, select:focus {
   padding: 1rem;
 }
 
+.restaurant-card:active {
+  transform: scale(0.98); /* Feedback for mobile tap */
+  opacity: 0.9;
+}
+
 .restaurant-header {
   display: flex;
   justify-content: space-between;
@@ -517,7 +526,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .hero-content h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.75rem, 8vw, 3.5rem);
   font-family: var(--font-title);
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -601,6 +610,72 @@ input:focus, textarea:focus, select:focus {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+/* ============================================
+   MODERN FILTERS & SLIDER
+   ============================================ */
+
+.filter-controls-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.control-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.slider-container {
+  flex: 1;
+  min-width: 250px;
+}
+
+.distance-display {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+/* Range Slider Styling */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -7px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+input[type=range]:active::-webkit-slider-thumb {
+  transform: scale(1.2);
 }
 
 .filter-group {
@@ -914,6 +989,14 @@ input:focus, textarea:focus, select:focus {
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .leaderboard-table {
+    display: block;
+    overflow-x: auto; /* Allow horizontal scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .leaderboard-table thead {

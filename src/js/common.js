@@ -28,6 +28,39 @@ const pagePaths = (() => {
 })();
 
 // ============================================
+// GEOLOCATION HELPERS
+// ============================================
+
+let userCoords = null;
+const AUF_COORDS = { lat: 15.1442, lng: 120.5955 };
+
+async function getUserLocation() {
+  if (userCoords) return userCoords;
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        resolve(userCoords);
+      },
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  });
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// ============================================
 // LOCAL STORAGE MANAGEMENT
 // ============================================
 
@@ -158,6 +191,31 @@ async function createRestaurantCard(restaurant) {
   const statusClass = restaurant.status === 'Open' ? 'restaurant-badge' : 'restaurant-badge closed';
   const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e0e0e0' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3E🍽️ No Image%3C/text%3E%3C/svg%3E";
 
+  let distanceHtml = '';
+  const locationRef = document.getElementById('location-reference')?.value || 'auf';
+  
+  // Determine which coordinates to use for display
+  const refCoords = (locationRef === 'me' && userCoords) ? userCoords : AUF_COORDS;
+  const refLabel = (locationRef === 'me' && userCoords) ? 'you' : 'AUF';
+
+  const dist = calculateDistance(refCoords.lat, refCoords.lng, restaurant.lat, restaurant.lng);
+  const walkTime = Math.round((dist / 5) * 60);
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lng}&travelmode=walking`;
+
+  const distText = dist < 0.1 ? 'Steps away' : `${dist.toFixed(1)} km`;
+  const timeText = walkTime < 1 ? '< 1 min walk' : `${walkTime} min walk`;
+
+  distanceHtml = `
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;">
+      <div style="font-size: 0.75rem; color: var(--primary); font-weight: 500;">
+        📍 ${distText} from ${refLabel} (${timeText})
+      </div>
+      <a href="${googleMapsUrl}" target="_blank" onclick="event.stopPropagation();" 
+         style="font-size: 0.7rem; color: var(--muted-foreground); text-decoration: none; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; background: var(--card);">
+         Walk →
+      </a>
+    </div>`;
+
   return `
     <div class="restaurant-card" onclick="window.location.href='${pagePaths.detailPath}?id=${restaurant.id}'">
       <img src="${restaurant.imageUrl}" alt="${restaurant.name}" class="restaurant-image" onerror="this.src='${fallbackImage}'">
@@ -174,6 +232,7 @@ async function createRestaurantCard(restaurant) {
           <span>(${restaurant.reviewCount})</span>
           <span>${restaurant.priceRange}</span>
         </div>
+        ${distanceHtml}
         <span class="${statusClass}">${restaurant.status}</span>
         <div class="restaurant-address">${restaurant.address}</div>
       </div>
@@ -231,6 +290,8 @@ function filterRestaurants() {
   const selectedPrice = document.getElementById('price-filter')?.value || 'All';
   const selectedRating = parseFloat(document.getElementById('rating-filter')?.value || 0);
   const isOpenOnly = document.getElementById('open-only-filter')?.checked || false;
+  const distanceRadius = parseFloat(document.getElementById('distance-slider')?.value || 5);
+  const locationRef = document.getElementById('location-reference')?.value || 'auf';
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -242,7 +303,15 @@ function filterRestaurants() {
     const matchesRating = restaurant.rating >= selectedRating;
     const matchesOpenNow = !isOpenOnly || restaurant.status === 'Open';
 
-    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow;
+    let matchesDistance = false;
+    if (locationRef === 'me' && userCoords) {
+      matchesDistance = calculateDistance(userCoords.lat, userCoords.lng, restaurant.lat, restaurant.lng) <= distanceRadius;
+    } else {
+      // Default to AUF basis
+      matchesDistance = calculateDistance(AUF_COORDS.lat, AUF_COORDS.lng, restaurant.lat, restaurant.lng) <= distanceRadius;
+    }
+
+    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow && matchesDistance;
   });
 
   return filtered;
@@ -250,12 +319,31 @@ function filterRestaurants() {
 
 function setupFilters() {
   const searchInput = document.getElementById('search-input');
-  const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter'];
+  const distanceSlider = document.getElementById('distance-slider');
+  const distanceValueLabel = document.getElementById('distance-value');
+  const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter', 'location-reference'];
 
-  const updateResults = () => {
+  const updateResults = async () => {
+    const locationRef = document.getElementById('location-reference');
+    
+    // If User chooses "Live Location", trigger permission prompt
+    if (locationRef && locationRef.value === 'me' && !userCoords) {
+      try {
+        await getUserLocation();
+      } catch (err) {
+        alert("Please enable location services to use the distance filter.");
+        locationRef.value = 'auf';
+      }
+    }
+
+    // Update the UI label for the slider
+    if (distanceSlider && distanceValueLabel) {
+      distanceValueLabel.textContent = `${parseFloat(distanceSlider.value).toFixed(1)} km`;
+    }
+
     const filtered = filterRestaurants();
     renderRestaurantGrid(filtered);
-    // Update map markers if map is visible
+    
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
     }
@@ -263,6 +351,11 @@ function setupFilters() {
 
   if (searchInput) {
     searchInput.addEventListener('input', updateResults);
+  }
+
+  if (distanceSlider) {
+    // Use 'input' event for real-time slider updates
+    distanceSlider.addEventListener('input', updateResults);
   }
 
   filters.forEach(filterId => {

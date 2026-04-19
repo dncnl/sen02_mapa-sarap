@@ -2,11 +2,11 @@
   "name": "mapa-sarap",
   "version": "1.0.0",
   "description": "MAPA-Sarap - Food Discovery App for Angeles University Foundation",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Building static assets'",
-    "start": "vercel dev"
-  },
+"scripts": {
+  "dev": "echo 'Vercel is running'",
+  "build": "echo 'Building static assets'",
+  "start": "echo 'Vercel is running'"
+},
   "keywords": [
     "food",
     "discovery",

@@ -97,6 +97,17 @@
 
       const isFavorited = await db.isFavorite(restaurant.id);
 
+      // Enhance location info with walking estimates
+      const refPoint = userCoords || AUF_COORDS;
+      const refLabel = userCoords ? 'you' : 'AUF';
+      const dist = calculateDistance(refPoint.lat, refPoint.lng, restaurant.lat, restaurant.lng);
+      const walkTime = Math.round((dist / 5) * 60);
+      
+      const distText = dist < 0.1 ? 'Steps away' : `${dist.toFixed(1)} km`;
+      const timeText = walkTime < 1 ? '< 1 min walk' : `${walkTime} min walk`;
+      const locationDisplay = `${distText} from ${refLabel} (${timeText})`;
+      const directionUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lng}&travelmode=walking`;
+
       // Render Header Image
       const detailHeader = document.getElementById('detail-header');
       const placeholderSVG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23e0e0e0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EImage Not Available%3C/text%3E%3C/svg%3E';
@@ -135,7 +146,10 @@
           </div>
           <div class="detail-meta-item">
             <span class="detail-meta-label">Distance</span>
-            <span class="detail-meta-value">${restaurant.distance}</span>
+            <span class="detail-meta-value">
+              ${locationDisplay}
+              <a href="${directionUrl}" target="_blank" class="btn btn-small btn-outline" style="display: block; width: fit-content; margin-top: 0.5rem;">Walk Directions</a>
+            </span>
           </div>
         </div>
       `;
