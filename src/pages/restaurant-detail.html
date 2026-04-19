@@ -57,7 +57,7 @@
 
           <div class="form-group">
             <label for="review-name">Your Name</label>
-            <input type="text" id="review-name" required>
+            <input type="text" id="review-name" readonly>
           </div>
 
           <div class="form-group">
@@ -177,8 +177,20 @@
       const ratingSelector = document.getElementById('rating-selector');
       ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
 
-      // Render Reviews from database-aligned data
-      const restaurantReviews = getReviewsByRestaurantId(restaurant.id);
+      const currentUser = await db.getUser();
+      const reviewForm = document.getElementById('review-form');
+      if (currentUser) {
+        document.getElementById('review-name').value = currentUser.name || currentUser.username || '';
+      } else {
+        reviewForm.innerHTML = `
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">Add a Review</h4>
+          <p style="color: var(--muted-foreground); margin-bottom: 1rem;">Please log in to post a review.</p>
+          <a href="${pagePaths.loginPath}" class="btn btn-primary">Login to Review</a>
+        `;
+      }
+
+      // Render Reviews from database
+      const restaurantReviews = await getReviewsByRestaurantId(restaurant.id);
       renderReviews(restaurantReviews);
     }
 
@@ -192,14 +204,33 @@
         return;
       }
 
-      // Note: In production, this would be sent to a backend API
-      // For now, we just show a message since new reviews can't be persisted in client-side storage
-      const name = document.getElementById('review-name').value;
+      const token = db.getToken();
+      if (!token) {
+        alert('Please login again to continue.');
+        window.location.href = pagePaths.loginPath;
+        return;
+      }
+
+      const restaurantId = parseInt(getUrlParam('id'), 10);
       const comment = document.getElementById('review-comment').value;
       const rating = parseInt(document.getElementById('review-rating-input').value) || 5;
 
-      alert('Thank you for your review! In production, this would be saved to the database.');
-      document.getElementById('review-form').reset();
+      if (!restaurantId) {
+        alert('Invalid restaurant');
+        return;
+      }
+
+      try {
+        await createReviewForRestaurant(restaurantId, comment, rating, token);
+        const updatedReviews = await getReviewsByRestaurantId(restaurantId);
+        renderReviews(updatedReviews);
+
+        document.getElementById('review-comment').value = '';
+        document.getElementById('review-rating-input').value = '5';
+        alert('Review submitted successfully!');
+      } catch (error) {
+        alert(error.message || 'Failed to submit review');
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

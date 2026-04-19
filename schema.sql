@@ -40,19 +40,20 @@ CREATE TABLE IF NOT EXISTS dishes (
 
 CREATE TABLE IF NOT EXISTS reviews (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    place_id INT REFERENCES places(id) ON DELETE CASCADE,
-    review_text TEXT,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    place_id INT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    review_text TEXT NOT NULL,
     helpful_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    UNIQUE(user_id, place_id)
 );
 
 CREATE TABLE IF NOT EXISTS ratings (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    place_id INT REFERENCES places(id) ON DELETE CASCADE,
-    rating INT CHECK (rating BETWEEN 1 AND 5),
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    place_id INT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, place_id)
 );
@@ -78,3 +79,33 @@ CREATE TABLE IF NOT EXISTS place_amenities (
     place_id INT REFERENCES places(id) ON DELETE CASCADE,
     amenity VARCHAR(100) NOT NULL
 );
+
+-- Tighten existing databases as well.
+ALTER TABLE reviews ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE reviews ALTER COLUMN place_id SET NOT NULL;
+ALTER TABLE reviews ALTER COLUMN review_text SET NOT NULL;
+ALTER TABLE ratings ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE ratings ALTER COLUMN place_id SET NOT NULL;
+ALTER TABLE ratings ALTER COLUMN rating SET NOT NULL;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'reviews_user_id_place_id_key'
+    ) THEN
+        ALTER TABLE reviews ADD CONSTRAINT reviews_user_id_place_id_key UNIQUE (user_id, place_id);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'ratings_user_id_place_id_key'
+    ) THEN
+        ALTER TABLE ratings ADD CONSTRAINT ratings_user_id_place_id_key UNIQUE (user_id, place_id);
+    END IF;
+END $$;
