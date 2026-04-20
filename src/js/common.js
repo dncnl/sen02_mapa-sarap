@@ -41,6 +41,7 @@ async function getUserLocation() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
         window.liveLocationCoordinates = userCoords;
         resolve(userCoords);
       },
@@ -139,19 +140,37 @@ const db = {
   saveAuthSession(user, token) {
     this.saveUser(user);
     localStorage.setItem('mapa-token', token);
+    // Backward compatibility for older builds that used a generic token key.
+    localStorage.setItem('token', token);
   },
 
   getToken() {
-    return localStorage.getItem('mapa-token');
+    const token = localStorage.getItem('mapa-token')
+      || localStorage.getItem('token')
+      || localStorage.getItem('auth-token')
+      || localStorage.getItem('mapa-auth-token');
+
+    if (token && !localStorage.getItem('mapa-token')) {
+      localStorage.setItem('mapa-token', token);
+    }
+
+    return token;
+  },
+
+  hasValidSession() {
+    return this.getUser() !== null && !!this.getToken();
   },
 
   logout() {
     localStorage.removeItem('mapa-user');
     localStorage.removeItem('mapa-token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('mapa-auth-token');
   },
 
   isLoggedIn() {
-    return this.getUser() !== null;
+    return this.hasValidSession();
   }
 };
 
@@ -182,13 +201,14 @@ function setupHeader() {
 
 async function updateHeaderAuth() {
   const user = await db.getUser();
+  const token = db.getToken();
   const authContainer = document.querySelector('.header-actions');
 
   if (!authContainer) return;
 
   let html = '';
 
-  if (user) {
+  if (user && token) {
     html = `
       <span class="text-sm text-muted-foreground">Hello, ${user.name || user.username || 'User'}!</span>
       <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
@@ -233,14 +253,13 @@ async function createRestaurantCard(restaurant) {
   let distanceHtml = '';
   const locationRef = document.getElementById('location-reference')?.value || 'auf-main';
   const basisContext = getRestaurantFilterContext();
-  const isLiveReference = locationRef === 'live-location' || locationRef === 'me';
-  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+  const basisLocation = typeof basisContext.getBasisLocationById === 'function'
     ? basisContext.getBasisLocationById(locationRef)
     : null;
   
   // Determine which coordinates to use for display
-  const refCoords = (isLiveReference && userCoords) ? userCoords : (basisLocation || AUF_COORDS);
-  const refLabel = (isLiveReference && userCoords) ? 'you' : (basisLocation?.name || 'AUF');
+  const refCoords = basisLocation || AUF_COORDS;
+  const refLabel = basisLocation?.name || 'AUF';
 
   const dist = calculateDistance(refCoords.lat, refCoords.lng, restaurant.lat, restaurant.lng);
   const walkTime = Math.round((dist / 5) * 60);
@@ -382,12 +401,10 @@ function filterRestaurants() {
   const radiusKm = parseFloat(document.getElementById('distance-slider')?.value || window.liveLocationRadiusKm || 5);
 
   const basisContext = getRestaurantFilterContext();
-  const liveLocation = userCoords || basisContext.liveLocation || window.liveLocationCoordinates || null;
-  const isLiveReference = locationReference === 'live-location' || locationReference === 'me';
-  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+  const basisLocation = typeof basisContext.getBasisLocationById === 'function'
     ? basisContext.getBasisLocationById(locationReference)
     : null;
-  const anchor = isLiveReference ? liveLocation : (basisLocation || AUF_COORDS);
+  const anchor = basisLocation || AUF_COORDS;
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -416,22 +433,6 @@ function setupFilters() {
   const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter', 'location-reference'];
 
   const updateResults = async () => {
-    const locationRef = document.getElementById('location-reference');
-    const isLiveReference = locationRef && (locationRef.value === 'live-location' || locationRef.value === 'me');
-    
-    // If User chooses "Live Location", trigger permission prompt
-    if (isLiveReference && !userCoords) {
-      try {
-        await getUserLocation();
-        if (typeof updateLiveLocationMarker === 'function') {
-          updateLiveLocationMarker();
-        }
-      } catch (err) {
-        alert("Please enable location services to use the distance filter.");
-        locationRef.value = 'auf-main';
-      }
-    }
-
     // Update the UI label for the slider
     if (distanceSlider && distanceValueLabel) {
       distanceValueLabel.textContent = `${parseFloat(distanceSlider.value).toFixed(1)} km`;
@@ -442,9 +443,6 @@ function setupFilters() {
     
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
-    }
-    if (typeof updateLiveLocationMarker === 'function') {
-      updateLiveLocationMarker();
     }
   };
 
@@ -547,18 +545,22 @@ function createReviewItem(review) {
   const isOwnReview = !!currentUser && Number(currentUser.id) === Number(review.userId);
   const hasHelpfulVote = !!review.hasHelpfulVote;
   const helpfulCount = Number(review.helpfulCount || 0);
+  const parsedDate = new Date(review.date);
+  const displayDate = Number.isNaN(parsedDate.getTime())
+    ? (review.date || '')
+    : parsedDate.toLocaleDateString();
 
   return `
     <div class="review-item">
       <div class="review-header">
         <div>
           <div class="review-author">${review.userName}</div>
-          <div class="review-date">${review.date}</div>
+          <div class="review-date">${displayDate}</div>
         </div>
       </div>
       <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
       <div class="review-text">${review.comment}</div>
-      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <div class="review-actions-row">
         <button type="button"
                 class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
                 data-review-id="${review.id}"
