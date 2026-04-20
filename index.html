@@ -56,9 +56,9 @@
     </section>
 
     <section class="container">
-      <div class="filter-controls-container">
+      <div class="filter-controls-container" style="padding: 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px;">
         <!-- Top Row: Search and View Switcher -->
-        <div class="control-header">
+        <div class="control-header" style="margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
           <div class="search-input" style="flex: 1; min-width: 280px;">
             <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
@@ -74,58 +74,65 @@
         </div>
 
         <!-- Bottom Row: Multi-Filters -->
-        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-end;">
+        <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start;">
           <!-- Location Context -->
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label class="filter-label">Basis</label>
-            <select id="location-reference" style="min-width: 140px;">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem; min-width: 200px;">
+            <label class="filter-label" style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em;">Location Basis</label>
+            <select id="location-reference" style="width: 100%; height: 42px; padding: 0 0.75rem; line-height: normal;">
               <option value="auf-main">Angeles University Foundation Main Building</option>
               <option value="auf-ps">Angeles University Foundation PS Building</option>
               <option value="auf-eya">Angeles University Foundation EYA Building</option>
               <option value="auf-scc">Angeles University Foundation SCC</option>
               <option value="live-location">Live Location</option>
             </select>
-            <span id="active-basis-indicator" class="active-basis-indicator" aria-live="polite">Active: Angeles University Foundation Main Building</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 6px;">
+              <span id="active-basis-indicator" style="font-size: 0.6rem; background: #22c55e; color: white; padding: 3px 10px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: nowrap;" aria-live="polite">Active: Main Building</span>
+              <div style="display: flex; align-items: center; gap: 0.4rem; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; background: white; height: 24px; cursor: pointer;">
+                <input type="checkbox" id="open-only-filter" style="width: 0.75rem; height: 0.75rem; margin: 0; cursor: pointer;">
+                <label for="open-only-filter" style="font-weight: 800; font-size: 0.6rem; cursor: pointer; color: var(--success); text-transform: uppercase; letter-spacing: 0.025em; white-space: nowrap;">Open Now</label>
+              </div>
+              <button onclick="window.resetAllFilters()" style="background: none; border: none; color: var(--muted-foreground); font-size: 0.6rem; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; padding: 0; margin-left: 4px; height: 24px; line-height: 24px;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--muted-foreground)'">Reset</button>
+            </div>
           </div>
 
           <!-- Distance Slider -->
-          <div class="slider-container">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-              <label class="filter-label">Distance Radius</label>
-              <span id="distance-value" class="distance-display">5.0 km</span>
+          <div class="slider-container" style="min-width: 160px; flex: 1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; align-items: center;">
+              <label class="filter-label" style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em;">Radius</label>
+              <span id="distance-value" style="font-size: 0.8rem; font-weight: 800; color: var(--primary);">5.0 km</span>
             </div>
-            <input type="range" id="distance-slider" min="0.1" max="5" step="0.1" value="5">
+            <input type="range" id="distance-slider" min="0.1" max="5" step="0.1" value="5" style="width: 100%; height: 42px; cursor: pointer; margin: 0;">
           </div>
 
-          <!-- Quick Filters -->
-          <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-            <select id="cuisine-filter" style="width: auto;">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label class="filter-label" style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em;">Cuisine</label>
+            <select id="cuisine-filter" style="width: 150px; height: 42px; padding: 0 0.75rem; line-height: normal;">
               <option value="All">All Cuisines</option>
               <option value="Filipino Fast Food">Filipino Fast Food</option>
               <option value="American Fast Food">American Fast Food</option>
               <option value="Korean">Korean</option>
               <option value="Wraps and Rice Meals">Wraps and Rice Meals</option>
             </select>
+          </div>
 
-            <select id="price-filter" style="width: auto;">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label class="filter-label" style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em;">Price</label>
+            <select id="price-filter" style="width: 110px; height: 42px; padding: 0 0.75rem; line-height: normal;">
               <option value="All">All Prices</option>
               <option value="$">$</option>
               <option value="$$">$$</option>
               <option value="$$$">$$$</option>
             </select>
+          </div>
 
-            <select id="rating-filter" style="width: auto;">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label class="filter-label" style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em;">Rating</label>
+            <select id="rating-filter" style="width: 110px; height: 42px; padding: 0 0.75rem; line-height: normal;">
               <option value="0">All Ratings</option>
               <option value="4.0">4.0+ ★</option>
               <option value="4.5">4.5+ ★</option>
             </select>
           </div>
-
-          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: white;">
-            <input type="checkbox" id="open-only-filter" style="width: 1.15rem; height: 1.15rem; margin: 0;">
-            <label for="open-only-filter" style="font-weight: 600; font-size: 0.875rem; cursor: pointer; color: var(--success);">Open Now</label>
-          </div>
-
         </div>
       </div>
     </section>
@@ -256,12 +263,13 @@
 
     function getSelectedBasisName() {
       const selectedBasisId = getSelectedBasis();
-      if (selectedBasisId === 'live-location') {
-        return 'Live Location';
-      }
+      if (selectedBasisId === 'live-location') return 'Live Location';
 
-      const selectedBasis = getBasisLocationById(selectedBasisId);
-      return selectedBasis ? selectedBasis.name : 'Angeles University Foundation Main Building';
+      const b = getBasisLocationById(selectedBasisId);
+      if (!b) return 'Main Building';
+      
+      // Return concise building names for the badge by removing the university prefix
+      return b.name.replace('Angeles University Foundation ', '');
     }
 
     function updateActiveBasisIndicator() {

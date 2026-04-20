@@ -50,10 +50,19 @@ async function fetchRestaurants(filters = {}) {
     if (filters.lng) params.append('lng', filters.lng);
     if (filters.radius) params.append('radius', filters.radius);
 
-    const response = await fetch(`${API_BASE}/restaurants?${params}`);
+    const url = `${API_BASE}/restaurants${params.toString() ? '?' + params : ''}`;
+    const response = await fetch(url);
+    
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     
-    restaurants = await response.json();
+    const data = await response.json();
+    // Ensure coordinates are mapped correctly if API uses database column names
+    restaurants = data.map(r => ({
+      ...r,
+      lat: r.lat || r.latitude,
+      lng: r.lng || r.longitude
+    }));
+
     return restaurants;
   } catch (error) {
     console.warn('Failed to fetch restaurants from API, using fallback:', error);
@@ -222,114 +231,6 @@ async function getAmenitiesForRestaurant(restaurantId) {
     return await response.json();
   } catch (error) {
     console.warn(`Failed to fetch amenities for restaurant ${restaurantId}:`, error);
-    const rest = getRestaurantById(restaurantId);
-    return rest ? rest.amenities : [];
+    return [];
   }
-}
-
-async function createReviewForRestaurant(restaurantId, comment, rating, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      placeId: restaurantId,
-      comment,
-      rating,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to create review');
-  }
-
-  return payload;
-}
-
-async function submitHelpfulVote(reviewId, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      reviewId,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to mark review as helpful');
-  }
-
-  return payload;
-}
-
-async function deleteReviewById(reviewId, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      reviewId,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to delete review');
-  }
-
-  return payload;
-}
-
-// Get top-rated restaurants
-function getTopRatedRestaurants(limit = null) {
-  const sorted = [...restaurants].sort((a, b) => {
-    if (b.rating !== a.rating) return b.rating - a.rating;
-    if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
-    return a.name.localeCompare(b.name);
-  });
-  return limit ? sorted.slice(0, limit) : sorted;
-}
-
-// Filter restaurants by criteria
-function filterRestaurantsByCriteria(criteria) {
-  return restaurants.filter(restaurant => {
-    if (criteria.cuisine && criteria.cuisine !== 'All' && restaurant.cuisine !== criteria.cuisine) return false;
-    if (criteria.priceRange && criteria.priceRange !== 'All' && restaurant.priceRange !== criteria.priceRange) return false;
-    if (criteria.minRating && restaurant.rating < criteria.minRating) return false;
-    if (criteria.openOnly && restaurant.status !== 'Open') return false;
-    return true;
-  });
-}
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    restaurants,
-    reviews,
-    getCuisines,
-    getStats,
-    getRestaurantById,
-    getReviewsByRestaurantId,
-    getDishesForRestaurant,
-    getDishMenuForRestaurant,
-    getDishReviewsByDishId,
-    createDishReviewForDish,
-    getAmenitiesForRestaurant,
-    createReviewForRestaurant,
-    submitHelpfulVote,
-    deleteReviewById,
-    getTopRatedRestaurants,
-    filterRestaurantsByCriteria,
-    fetchRestaurants,
-    initializeData
-  };
 }

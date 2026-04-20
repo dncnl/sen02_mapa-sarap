@@ -227,7 +227,8 @@ function renderStars(rating) {
 
 async function createRestaurantCard(restaurant) {
   const isFavorited = await db.isFavorite(restaurant.id);
-  const statusClass = restaurant.status === 'Open' ? 'restaurant-badge' : 'restaurant-badge closed';
+  const isOpen = restaurant.status === 'Open';
+
   const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e0e0e0' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3E🍽️ No Image%3C/text%3E%3C/svg%3E";
 
   let distanceHtml = '';
@@ -250,38 +251,54 @@ async function createRestaurantCard(restaurant) {
   const timeText = walkTime < 1 ? '< 1 min walk' : `${walkTime} min walk`;
 
   distanceHtml = `
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;">
-      <div style="font-size: 0.75rem; color: var(--primary); font-weight: 500;">
-        📍 ${distText} from ${refLabel} (${timeText})
+    <div style="margin-top: auto; padding-top: 1rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.8rem; background: var(--muted); border-radius: 10px; border: 1px solid var(--border);">
+        <div style="display: flex; flex-direction: column; gap: 1px;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--foreground); display: flex; align-items: center; gap: 4px;">
+            📍 ${distText}
+          </div>
+          <div style="font-size: 0.6rem; color: var(--muted-foreground); font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em;">
+            ${refLabel} • ${timeText}
+          </div>
+        </div>
+        <a href="${googleMapsUrl}" target="_blank" onclick="event.stopPropagation();" 
+           style="background: white; color: var(--primary); font-size: 0.65rem; font-weight: 800; text-decoration: none; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: nowrap;">
+           Walk →
+        </a>
       </div>
-      <a href="${googleMapsUrl}" target="_blank" onclick="event.stopPropagation();" 
-         style="font-size: 0.7rem; color: var(--muted-foreground); text-decoration: none; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; background: var(--card);">
-         Walk →
-      </a>
     </div>`;
 
   return `
-    <div class="restaurant-card" onclick="window.location.href='${pagePaths.detailPath}?id=${restaurant.id}'">
-      <img src="${restaurant.imageUrl}" alt="${restaurant.name}" class="restaurant-image" onerror="this.src='${fallbackImage}'">
-      <div class="restaurant-content">
-        <div class="restaurant-header">
-          <div class="restaurant-name">${restaurant.name}</div>
-          <button class="favorite-btn ${isFavorited ? 'active' : ''}" 
-                  onclick="event.stopPropagation(); toggleFavorite(${restaurant.id}, this)">
-            ${isFavorited ? '♥' : '♡'}
-          </button>
+    <div class="restaurant-card" onclick="window.location.href='${pagePaths.detailPath}?id=${restaurant.id}'" style="display: flex; flex-direction: column; height: 100%; transition: transform 0.2s; cursor: pointer;">
+      <div style="position: relative; overflow: hidden; border-radius: 12px 12px 0 0;">
+        <img src="${restaurant.imageUrl}" alt="${restaurant.name}" class="restaurant-image" style="height: 200px; width: 100%; object-fit: cover;" onerror="this.src='${fallbackImage}'">
+        <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background: ${isOpen ? '#22c55e' : '#ef4444'}; color: white; z-index: 2;">
+          ${restaurant.status}
         </div>
-        <div class="restaurant-meta">
-          <span class="star-rating">${renderStars(restaurant.rating)} <span class="rating-number">${restaurant.rating}</span></span>
-          <span>(${restaurant.reviewCount})</span>
-          <span>${restaurant.priceRange}</span>
+        <button class="favorite-btn ${isFavorited ? 'active' : ''}" 
+                style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.9); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                onclick="event.stopPropagation(); toggleFavorite(${restaurant.id}, this)">
+          <span style="font-size: 1.2rem; line-height: 1;">${isFavorited ? '♥' : '♡'}</span>
+        </button>
+      </div>
+      <div class="restaurant-content" style="padding: 1.25rem; display: flex; flex-direction: column; flex-grow: 1;">
+        <div class="restaurant-header" style="margin-bottom: 0.5rem;">
+          <div class="restaurant-name" style="font-size: 1.15rem; font-weight: 700; color: var(--foreground);">${restaurant.name}</div>
+        </div>
+        <div class="restaurant-meta" style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; font-size: 0.85rem;">
+          <div style="display: flex; align-items: center; color: #f59e0b;">
+            <span style="letter-spacing: -1px; margin-right: 4px;">${renderStars(restaurant.rating)}</span>
+            <span style="font-weight: 700; color: var(--foreground);">${restaurant.rating}</span>
+          </div>
+          <span style="color: var(--muted-foreground);">(${restaurant.reviewCount})</span>
+          <span style="margin-left: auto; font-weight: 600; color: var(--muted-foreground);">${restaurant.priceRange}</span>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--muted-foreground); line-height: 1.4; margin-bottom: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          ${restaurant.address}
         </div>
         ${distanceHtml}
-        <span class="${statusClass}">${restaurant.status}</span>
-        <div class="restaurant-address">${restaurant.address}</div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 async function toggleFavorite(restaurantId, button) {
@@ -349,21 +366,6 @@ async function renderRestaurantGrid(filteredRestaurants, containerId = 'restaura
 // FILTERING & SEARCH
 // ============================================
 
-function getDistanceKm(lat1, lng1, lat2, lng2) {
-  const toRadians = (value) => (value * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-
-  const deltaLat = toRadians(lat2 - lat1);
-  const deltaLng = toRadians(lng2 - lng1);
-  const a =
-    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return earthRadiusKm * c;
-}
-
 function getRestaurantFilterContext() {
   if (typeof window.getRestaurantFilterContext === 'function') {
     return window.getRestaurantFilterContext();
@@ -373,6 +375,9 @@ function getRestaurantFilterContext() {
 }
 
 function filterRestaurants() {
+  // Safety check: ensure the data layer has loaded the array
+  if (!Array.isArray(restaurants)) return [];
+
   const searchQuery = document.getElementById('search-input')?.value || '';
   const selectedCuisine = document.getElementById('cuisine-filter')?.value || 'All';
   const selectedPrice = document.getElementById('price-filter')?.value || 'All';
@@ -398,10 +403,15 @@ function filterRestaurants() {
     const matchesPrice = selectedPrice === 'All' || restaurant.priceRange === selectedPrice;
     const matchesRating = restaurant.rating >= selectedRating;
     const matchesOpenNow = !isOpenOnly || restaurant.status === 'Open';
-    const hasCoordinates = Number.isFinite(Number(restaurant.lat)) && Number.isFinite(Number(restaurant.lng));
-    const matchesDistance = !anchor || !hasCoordinates || (
-      getDistanceKm(anchor.lat, anchor.lng, restaurant.lat, restaurant.lng) <= radiusKm
-    );
+    
+    // Safe coordinate check
+    const rLat = parseFloat(restaurant.lat || restaurant.latitude);
+    const rLng = parseFloat(restaurant.lng || restaurant.longitude);
+    const hasCoordinates = !isNaN(rLat) && !isNaN(rLng);
+
+    // If restaurant has no coords, we show it anyway so it's not "invisible"
+    const matchesDistance = !anchor || !hasCoordinates || 
+      (calculateDistance(anchor.lat, anchor.lng, rLat, rLng) <= radiusKm);
 
     return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow && matchesDistance;
   });
@@ -415,7 +425,30 @@ function setupFilters() {
   const distanceValueLabel = document.getElementById('distance-value');
   const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter', 'location-reference'];
 
+  // Add a Reset Filters helper
+  window.resetAllFilters = () => {
+    if (searchInput) searchInput.value = '';
+    if (distanceSlider) distanceSlider.value = 5;
+    filters.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = el.tagName === 'SELECT' ? (el.options[0].value || 'All') : '';
+      }
+    });
+    updateResults();
+  };
+
+  const showLoadingState = () => {
+    const container = document.getElementById('restaurants-grid');
+    if (container) {
+      container.style.opacity = '0.5';
+      container.style.transition = 'opacity 0.2s';
+    }
+  };
+
   const updateResults = async () => {
+    showLoadingState();
     const locationRef = document.getElementById('location-reference');
     const isLiveReference = locationRef && (locationRef.value === 'live-location' || locationRef.value === 'me');
     
@@ -437,8 +470,17 @@ function setupFilters() {
       distanceValueLabel.textContent = `${parseFloat(distanceSlider.value).toFixed(1)} km`;
     }
 
+    // Sync the active location badge in the UI
+    if (typeof updateActiveBasisIndicator === 'function') {
+      updateActiveBasisIndicator();
+    }
+
     const filtered = filterRestaurants();
-    renderRestaurantGrid(filtered);
+    setTimeout(async () => {
+      await renderRestaurantGrid(filtered);
+      const container = document.getElementById('restaurants-grid');
+      if (container) container.style.opacity = '1';
+    }, 100);
     
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
@@ -470,231 +512,4 @@ function setupFilters() {
   updateResults();
 }
 
-// ============================================
-// STAR RATING SELECTOR (for forms)
-// ============================================
-
-function createRatingSelector(name = 'rating', initialRating = 0) {
-  return `
-    <div class="rating-selector" style="display: flex; gap: 0.5rem; font-size: 1.5rem;">
-      ${[1, 2, 3, 4, 5].map(star => `
-        <button type="button" 
-                class="rating-star ${star <= initialRating ? 'active' : ''}" 
-                data-value="${star}"
-                onclick="setRating(${star}, event)"
-                style="background: none; border: none; cursor: pointer; padding: 0;">
-          ★
-        </button>
-      `).join('')}
-      <input type="hidden" name="${name}" id="${name}-input" value="${initialRating}">
-    </div>
-  `;
-}
-
-function setRating(star, event) {
-  event.preventDefault();
-  const stars = event.target.parentElement.querySelectorAll('.rating-star');
-  const input = event.target.parentElement.querySelector('[type="hidden"]');
-  
-  stars.forEach((s, index) => {
-    if (index < star) {
-      s.classList.add('active');
-      s.style.color = 'var(--primary)';
-    } else {
-      s.classList.remove('active');
-      s.style.color = 'inherit';
-    }
-  });
-  
-  input.value = star;
-}
-
-// ============================================
-// FORM VALIDATION
-// ============================================
-
-function validateEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-function validateForm(formData) {
-  const errors = {};
-
-  if (!formData.name || formData.name.trim() === '') {
-    errors.name = 'Name is required';
-  }
-
-  if (!formData.email || formData.email.trim() === '') {
-    errors.email = 'Email is required';
-  } else if (!validateEmail(formData.email)) {
-    errors.email = 'Invalid email format';
-  }
-
-  if (formData.password && formData.password.length < 6) {
-    errors.password = 'Password must be at least 6 characters';
-  }
-
-  return errors;
-}
-
-// ============================================
-// REVIEW RENDERING
-// ============================================
-
-function createReviewItem(review) {
-  const currentUser = db.getUser();
-  const isOwnReview = !!currentUser && Number(currentUser.id) === Number(review.userId);
-  const hasHelpfulVote = !!review.hasHelpfulVote;
-  const helpfulCount = Number(review.helpfulCount || 0);
-
-  return `
-    <div class="review-item">
-      <div class="review-header">
-        <div>
-          <div class="review-author">${review.userName}</div>
-          <div class="review-date">${review.date}</div>
-        </div>
-      </div>
-      <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
-      <div class="review-text">${review.comment}</div>
-      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <button type="button"
-                class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
-                data-review-id="${review.id}"
-                onclick="markReviewHelpful(${review.id}, event)">
-          👍 <span class="review-helpful-count">${helpfulCount}</span> found this helpful
-        </button>
-        ${isOwnReview ? `
-          <button type="button"
-                  class="btn btn-small btn-outline"
-                  onclick="deleteOwnReview(${review.id}, event)">
-            Delete Review
-          </button>
-        ` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function renderReviews(reviews, containerId = 'reviews-list') {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  if (reviews.length === 0) {
-    container.innerHTML = '<p style="text-align: center; color: var(--muted-foreground);">No reviews yet. Be the first to review!</p>';
-    return;
-  }
-
-  container.innerHTML = reviews.map(review => createReviewItem(review)).join('');
-}
-
-async function markReviewHelpful(reviewId, event) {
-  const button = event?.currentTarget || event?.target;
-
-  if (!button) return;
-
-  const countEl = button.querySelector('.review-helpful-count');
-  const previousVoted = button.classList.contains('voted');
-  const previousCount = countEl ? Number(countEl.textContent || 0) : 0;
-  const optimisticVoted = !previousVoted;
-  const optimisticCount = optimisticVoted
-    ? previousCount + 1
-    : Math.max(previousCount - 1, 0);
-
-  const user = await db.getUser();
-  if (!user) {
-    alert('Please login to mark a review as helpful');
-    window.location.href = pagePaths.loginPath;
-    return;
-  }
-
-  const token = db.getToken();
-  if (!token) {
-    alert('Please login again to continue.');
-    window.location.href = pagePaths.loginPath;
-    return;
-  }
-
-  try {
-    // Update instantly, then reconcile with server response.
-    button.classList.toggle('voted', optimisticVoted);
-    if (countEl) {
-      countEl.textContent = optimisticCount;
-    }
-    button.title = optimisticVoted
-      ? 'Click to remove your helpful vote'
-      : 'Click to mark this review as helpful';
-
-    button.disabled = true;
-    const payload = await submitHelpfulVote(reviewId, token);
-    button.classList.toggle('voted', !!payload.voted);
-    if (countEl) {
-      countEl.textContent = payload.helpfulCount;
-    }
-    button.title = payload.voted
-      ? 'Click to remove your helpful vote'
-      : 'Click to mark this review as helpful';
-  } catch (error) {
-    button.classList.toggle('voted', previousVoted);
-    if (countEl) {
-      countEl.textContent = previousCount;
-    }
-    button.title = previousVoted
-      ? 'Click to remove your helpful vote'
-      : 'Click to mark this review as helpful';
-    alert(error.message || 'Failed to mark review as helpful');
-  } finally {
-    button.disabled = false;
-  }
-}
-
-async function deleteOwnReview(reviewId, event) {
-  event.preventDefault();
-
-  const user = db.getUser();
-  if (!user) {
-    alert('Please login to delete your review');
-    window.location.href = pagePaths.loginPath;
-    return;
-  }
-
-  const token = db.getToken();
-  if (!token) {
-    alert('Please login again to continue.');
-    window.location.href = pagePaths.loginPath;
-    return;
-  }
-
-  const shouldDelete = window.confirm('Delete your review? This cannot be undone.');
-  if (!shouldDelete) return;
-
-  try {
-    await deleteReviewById(reviewId, token);
-
-    const restaurantId = parseInt(getUrlParam('id'), 10);
-    if (Number.isInteger(restaurantId) && restaurantId > 0) {
-      const updatedReviews = await getReviewsByRestaurantId(restaurantId);
-      renderReviews(updatedReviews);
-    }
-
-    alert('Review deleted successfully.');
-  } catch (error) {
-    alert(error.message || 'Failed to delete review');
-  }
-}
-
-// ============================================
-// URL PARAMETERS
-// ============================================
-
-function getUrlParam(param) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(param);
-}
-
-// ============================================
-// INITIALIZATION
-// ============================================
-
-document.addEventListener('DOMContentLoaded', setupHeader);
+// =============================

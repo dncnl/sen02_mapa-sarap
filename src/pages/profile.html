@@ -69,33 +69,33 @@
           <button class="btn btn-outline" onclick="logout()">Logout</button>
         </div>
 
-        <div class="profile-section">
+        <div class="profile-section" style="background: var(--card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
           <h3>Account Information</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Full Name</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.25rem;">Full Name</div>
               <div style="font-weight: 600;">${user.name}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Email</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.25rem;">Email</div>
               <div style="font-weight: 600;">${user.email}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Member Since</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.25rem;">Member Since</div>
               <div style="font-weight: 600;">${new Date().toLocaleDateString()}</div>
             </div>
           </div>
         </div>
 
-        <div class="profile-section">
+        <div class="profile-section" style="background: var(--card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
           <h3>Activity</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Favorites</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.25rem;">Favorites</div>
               <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">${favorites.length}</div>
             </div>
             <div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.5rem;">Reviews</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-foreground); letter-spacing: 0.05em; margin-bottom: 0.25rem;">Reviews</div>
               <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">0</div>
             </div>
           </div>
