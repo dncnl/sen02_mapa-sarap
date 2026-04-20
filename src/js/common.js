@@ -231,11 +231,16 @@ async function createRestaurantCard(restaurant) {
   const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e0e0e0' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3E🍽️ No Image%3C/text%3E%3C/svg%3E";
 
   let distanceHtml = '';
-  const locationRef = document.getElementById('location-reference')?.value || 'auf';
+  const locationRef = document.getElementById('location-reference')?.value || 'auf-main';
+  const basisContext = getRestaurantFilterContext();
+  const isLiveReference = locationRef === 'live-location' || locationRef === 'me';
+  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+    ? basisContext.getBasisLocationById(locationRef)
+    : null;
   
   // Determine which coordinates to use for display
-  const refCoords = (locationRef === 'me' && userCoords) ? userCoords : AUF_COORDS;
-  const refLabel = (locationRef === 'me' && userCoords) ? 'you' : 'AUF';
+  const refCoords = (isLiveReference && userCoords) ? userCoords : (basisLocation || AUF_COORDS);
+  const refLabel = (isLiveReference && userCoords) ? 'you' : (basisLocation?.name || 'AUF');
 
   const dist = calculateDistance(refCoords.lat, refCoords.lng, restaurant.lat, restaurant.lng);
   const walkTime = Math.round((dist / 5) * 60);
@@ -373,12 +378,16 @@ function filterRestaurants() {
   const selectedPrice = document.getElementById('price-filter')?.value || 'All';
   const selectedRating = parseFloat(document.getElementById('rating-filter')?.value || 0);
   const isOpenOnly = document.getElementById('open-only-filter')?.checked || false;
-  const locationReference = document.getElementById('location-reference')?.value || 'auf';
+  const locationReference = document.getElementById('location-reference')?.value || 'auf-main';
   const radiusKm = parseFloat(document.getElementById('distance-slider')?.value || window.liveLocationRadiusKm || 5);
 
   const basisContext = getRestaurantFilterContext();
   const liveLocation = userCoords || basisContext.liveLocation || window.liveLocationCoordinates || null;
-  const anchor = locationReference === 'me' ? liveLocation : AUF_COORDS;
+  const isLiveReference = locationReference === 'live-location' || locationReference === 'me';
+  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+    ? basisContext.getBasisLocationById(locationReference)
+    : null;
+  const anchor = isLiveReference ? liveLocation : (basisLocation || AUF_COORDS);
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -408,9 +417,10 @@ function setupFilters() {
 
   const updateResults = async () => {
     const locationRef = document.getElementById('location-reference');
+    const isLiveReference = locationRef && (locationRef.value === 'live-location' || locationRef.value === 'me');
     
     // If User chooses "Live Location", trigger permission prompt
-    if (locationRef && locationRef.value === 'me' && !userCoords) {
+    if (isLiveReference && !userCoords) {
       try {
         await getUserLocation();
         if (typeof updateLiveLocationMarker === 'function') {
@@ -418,7 +428,7 @@ function setupFilters() {
         }
       } catch (err) {
         alert("Please enable location services to use the distance filter.");
-        locationRef.value = 'auf';
+        locationRef.value = 'auf-main';
       }
     }
 
