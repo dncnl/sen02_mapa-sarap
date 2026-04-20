@@ -133,7 +133,7 @@
       if (price === null || price === undefined || price === '') return 'Price not listed';
       const numericPrice = Number(price);
       if (Number.isNaN(numericPrice)) return 'Price not listed';
-      return `PHP ${numericPrice.toFixed(2)}`;
+      return `₱${numericPrice.toFixed(2)}`;
     }
 
     function getDishNameById(dishId) {

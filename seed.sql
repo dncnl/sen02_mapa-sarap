@@ -24,17 +24,29 @@ VALUES
 
 -- DISHES
 INSERT INTO dishes (place_id, name, description, price, image_url) VALUES
-(1, 'Chickenjoy', 'Crispy fried chicken with gravy.', 95.00, 'https://via.placeholder.com/150'),
-(1, 'Jolly Spaghetti', 'Sweet-style Filipino spaghetti.', 75.00, 'https://via.placeholder.com/150'),
+(1, 'Yumburger Combo', 'Classic Yumburger served with sides for a quick and satisfying meal.', 118.00, 'https://via.placeholder.com/150'),
+(1, 'Champ Jr.', 'A thicker, meatier burger option that still stays budget-friendly.', 183.00, 'https://via.placeholder.com/150'),
+(1, 'Super Meal C', 'Yumburger with half Jolly Spaghetti, regular fries, and a drink.', 129.00, 'https://via.placeholder.com/150'),
+(1, 'Super Meal B', 'Chickenjoy with half Jolly Spaghetti, regular fries, and a drink.', 180.00, 'https://via.placeholder.com/150'),
+(1, 'Super Meal A', 'Chickenjoy with half Jolly Spaghetti, rice, and a drink for bigger appetites.', 208.00, 'https://via.placeholder.com/150'),
 
-(2, 'Big Mac', 'Classic double beef burger.', 150.00, 'https://via.placeholder.com/150'),
-(2, 'McChicken', 'Chicken sandwich with mayo.', 120.00, 'https://via.placeholder.com/150'),
+(2, 'Double Cheeseburger Meal', 'Two beef patties with melted cheese, fries, and a drink in one value meal.', 237.00, 'https://via.placeholder.com/150'),
+(2, 'Cheeseburger Meal', 'McDonald''s classic cheeseburger paired with fries and a refreshing drink.', 146.00, 'https://via.placeholder.com/150'),
+(2, 'Big Mac Meal', 'Iconic layered Big Mac served with fries and a drink.', 264.00, 'https://via.placeholder.com/150'),
+(2, 'Quarter Pounder with Cheese Meal', 'A juicy quarter-pound beef burger with cheese, fries, and a drink.', 264.00, 'https://via.placeholder.com/150'),
+(2, 'Crispy Chicken Sandwich Meal', 'Crispy chicken sandwich combo with fries and a drink for everyday cravings.', 157.00, 'https://via.placeholder.com/150'),
 
-(3, 'Yangnyeom Chicken', 'Sweet and spicy Korean fried chicken.', 220.00, 'https://via.placeholder.com/150'),
-(3, 'Snow Cheese Chicken', 'Chicken topped with cheese powder.', 230.00, 'https://via.placeholder.com/150'),
+(3, 'Original Boneless Chicken', 'Crispy boneless fried chicken with a straightforward savory flavor.', 215.00, 'https://via.placeholder.com/150'),
+(3, 'Yangnyeom w/ Garlic Boneless Chicken', 'Sweet-spicy Korean glaze finished with garlic for a bold kick.', 230.00, 'https://via.placeholder.com/150'),
+(3, 'Snow Cheese Boneless Chicken', 'Boneless chicken dusted with creamy cheese powder for a rich finish.', 230.00, 'https://via.placeholder.com/150'),
+(3, 'Jack Daniels Boneless Chicken', 'Smoky-sweet sauce inspired by Jack Daniels flavoring on crispy chicken.', 220.00, 'https://via.placeholder.com/150'),
+(3, 'Spicy BBQ Boneless Chicken', 'Spicy barbecue-coated chicken with smoky notes and extra heat.', 220.00, 'https://via.placeholder.com/150'),
 
-(4, 'Chicken Wrap', 'Grilled chicken in soft tortilla.', 120.00, 'https://via.placeholder.com/150'),
-(4, 'Beef Rice Meal', 'Savory beef served with rice.', 130.00, 'https://via.placeholder.com/150');
+(4, 'Vegetarian Wrap (Jr.)', 'A fresh meat-free wrap with customizable vegetables, dressing, and seasoning.', 129.00, 'https://via.placeholder.com/150'),
+(4, 'Uptown Caesar Wrap (Jr.)', 'Grilled chicken Caesar wrap with parmesan, croutons, and romaine.', 149.00, 'https://via.placeholder.com/150'),
+(4, 'Little Italy Wrap (Jr.)', 'Italian-style wrap with roasted peppers, onions, and a herby dressing.', 149.00, 'https://via.placeholder.com/150'),
+(4, 'Downtown Burrito Wrap (Jr.)', 'Hearty burrito-style wrap with rice, beans, cheese, and Mexican sauce.', 149.00, 'https://via.placeholder.com/150'),
+(4, 'Thai Chili Express Wrap (Jr.)', 'Thai-inspired wrap with chili ginger sauce and sesame notes.', 149.00, 'https://via.placeholder.com/150');
 
 -- PLACE AMENITIES
 INSERT INTO place_amenities (place_id, amenity) VALUES
