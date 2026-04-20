@@ -7,18 +7,17 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body; 
+  const { name, email, password } = req.body;
 
-  if (!email || !password) {
+  if ((!email && !name) || !password) {
     return res.status(400).json({ error: 'Email/Username and password are required' });
   }
 
   try {
-    // Query user by email or username
     const { rows } = await sql`
       SELECT id, username, email, password_hash, role 
       FROM users 
-      WHERE email = ${email} OR username = ${email}
+      WHERE email = ${email} OR username = ${name}
       LIMIT 1
     `;
 
@@ -28,7 +27,6 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password against password_hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -42,7 +40,12 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       token,
-      user: { id: user.id, name: user.username, email: user.email, role: user.role }
+      user: { 
+        id: user.id, 
+        name: user.username, 
+        email: user.email, 
+        role: user.role 
+      }
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
