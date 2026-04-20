@@ -221,6 +221,50 @@ function renderStars(rating) {
   return stars;
 }
 
+function getUrlParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+function createRatingSelector(id, max = 5) {
+  let html = `<div class="rating-input-container" style="display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer;">`;
+  for (let i = 1; i <= max; i++) {
+    html += `<span class="star-input" data-value="${i}" onclick="setRating('${id}', ${i}, this)" style="color: #ccc;">☆</span>`;
+  }
+  html += `<input type="hidden" id="${id}-input" value="0"></div>`;
+  return html;
+}
+
+window.setRating = (id, value, element) => {
+  const container = element.parentElement;
+  const stars = container.querySelectorAll('.star-input');
+  const input = document.getElementById(`${id}-input`);
+  input.value = value;
+  stars.forEach((s, idx) => {
+    s.textContent = idx < value ? '★' : '☆';
+    s.style.color = idx < value ? '#f59e0b' : '#ccc';
+  });
+};
+
+function renderReviews(reviewsList, containerId = 'reviews-list') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (reviewsList.length === 0) {
+    container.innerHTML = '<p class="text-muted-foreground">No reviews yet. Be the first to share your experience!</p>';
+    return;
+  }
+  container.innerHTML = reviewsList.map(review => `
+    <div class="review-item" style="padding: 1rem 0; border-bottom: 1px solid var(--border);">
+      <div class="review-header" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <div class="review-author" style="font-weight: 700;">${review.userName}</div>
+        <div class="review-date" style="font-size: 0.8rem; color: var(--muted-foreground);">${new Date(review.date).toLocaleDateString()}</div>
+      </div>
+      <div class="review-rating" style="margin-bottom: 0.5rem;">${renderStars(review.rating)}</div>
+      <p class="review-comment" style="font-size: 0.95rem;">${review.comment}</p>
+    </div>
+  `).join('');
+}
+
 // ============================================
 // RESTAURANT CARD RENDERING
 // ============================================

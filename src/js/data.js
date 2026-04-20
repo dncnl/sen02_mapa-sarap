@@ -72,6 +72,35 @@ async function fetchRestaurants(filters = {}) {
 }
 
 /**
+ * Submit a new review for a restaurant
+ */
+async function createReviewForRestaurant(restaurantId, comment, rating, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      placeId: restaurantId,
+      rating,
+      comment,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to submit review');
+  }
+
+  return payload;
+}
+
+function getTopRatedRestaurants(limit = 10) {
+  return [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, limit);
+}
+
+/**
  * Fetch reviews for a specific restaurant
  * @param {number} placeId - restaurant ID
  * @returns {Array} reviews array
