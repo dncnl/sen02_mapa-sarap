@@ -52,7 +52,10 @@ async function fetchRestaurants(filters = {}) {
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     
     const data = await response.json();
-    if (!Array.isArray(data)) throw new Error('Expected array of restaurants');
+    
+    // If the API returns successfully but the database is empty (common in new production deploys),
+    // we throw an error to trigger the FALLBACK_DATA logic so the UI isn't empty.
+    if (!Array.isArray(data) || data.length === 0) throw new Error('No data found in API');
     
     // Ensure coordinates are mapped correctly if API uses database column names
     restaurants = data.map(r => ({
