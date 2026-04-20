@@ -42,6 +42,50 @@
       <!-- Description & Details -->
       <div class="detail-description" id="detail-description"></div>
 
+      <!-- Menu Section -->
+      <section class="menu-section" id="menu-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+          <h3 style="margin: 0;">Restaurant Menu</h3>
+          <span id="menu-count" class="dish-badge" style="background: var(--muted); color: var(--foreground);">0 dishes</span>
+        </div>
+        <div class="menu-grid" id="menu-grid"></div>
+      </section>
+
+      <!-- Dish Reviews Section -->
+      <section class="dish-reviews-section">
+        <div class="dish-reviews-heading">
+          <h3>Dish Reviews</h3>
+          <div class="dish-review-controls">
+            <label for="dish-review-filter">Select Dish</label>
+            <select id="dish-review-filter" onchange="handleDishReviewSelection()">
+              <option value="">Choose a dish</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="dish-rating-summary" id="dish-rating-summary">
+          <div class="dish-summary-title">Choose a dish to see ratings and reviews.</div>
+        </div>
+
+        <form class="review-form" id="dish-review-form" onsubmit="submitDishReview(event)">
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
+
+          <div class="form-group">
+            <label>Dish Rating</label>
+            <div id="dish-rating-selector"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="dish-review-comment">Your Dish Review</label>
+            <textarea id="dish-review-comment" placeholder="Share your thoughts about this specific dish..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit Dish Review</button>
+        </form>
+
+        <div class="review-list" id="dish-reviews-list"></div>
+      </section>
+
       <!-- Reviews Section -->
       <section class="reviews-section">
         <h3>Reviews</h3>
@@ -82,6 +126,225 @@
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
+    let dishMenuItems = [];
+    let dishReviewCache = {};
+
+    function formatDishPrice(price) {
+      if (price === null || price === undefined || price === '') return 'Price not listed';
+      const numericPrice = Number(price);
+      if (Number.isNaN(numericPrice)) return 'Price not listed';
+      return `PHP ${numericPrice.toFixed(2)}`;
+    }
+
+    function getDishNameById(dishId) {
+      const match = dishMenuItems.find((dish) => Number(dish.id) === Number(dishId));
+      return match ? match.name : 'Selected Dish';
+    }
+
+    function createDishReviewMarkup(review) {
+      const createdAt = new Date(review.date);
+      const reviewDate = Number.isNaN(createdAt.getTime())
+        ? ''
+        : createdAt.toLocaleString();
+
+      return `
+        <div class="review-item">
+          <div class="review-header">
+            <div>
+              <div class="review-author">${review.userName || 'Anonymous'}</div>
+              <div class="review-date">${reviewDate}</div>
+            </div>
+          </div>
+          <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
+          <div class="review-text">${review.comment || 'No comment provided.'}</div>
+        </div>
+      `;
+    }
+
+    async function loadDishReviewData(dishId) {
+      const parsedId = Number(dishId);
+      if (!parsedId) {
+        return {
+          dishId: null,
+          avgRating: 0,
+          totalReviews: 0,
+          reviews: [],
+        };
+      }
+
+      if (dishReviewCache[parsedId]) {
+        return dishReviewCache[parsedId];
+      }
+
+      const payload = await getDishReviewsByDishId(parsedId);
+      dishReviewCache[parsedId] = payload;
+      return payload;
+    }
+
+    async function renderDishReviewsPanel() {
+      const selectedDishId = document.getElementById('dish-review-filter')?.value;
+      const summaryEl = document.getElementById('dish-rating-summary');
+      const listEl = document.getElementById('dish-reviews-list');
+      const formEl = document.getElementById('dish-review-form');
+
+      if (!selectedDishId) {
+        summaryEl.innerHTML = '<div class="dish-summary-title">Choose a dish to see ratings and reviews.</div>';
+        listEl.innerHTML = '';
+        formEl.style.display = 'none';
+        return;
+      }
+
+      const dishName = getDishNameById(selectedDishId);
+      const payload = await loadDishReviewData(selectedDishId);
+
+      summaryEl.innerHTML = `
+        <div class="dish-summary-title">${dishName}</div>
+        <div class="dish-summary-metrics">
+          <span class="dish-summary-stars">${renderStars(payload.avgRating)} ${payload.avgRating.toFixed(1)}/5</span>
+          <span class="dish-summary-count">${payload.totalReviews} review${payload.totalReviews === 1 ? '' : 's'}</span>
+        </div>
+      `;
+
+      if (!payload.reviews || payload.reviews.length === 0) {
+        listEl.innerHTML = `
+          <div class="review-item">
+            <div class="review-text">No dish reviews yet for this item. Be the first to review it.</div>
+          </div>
+        `;
+      } else {
+        listEl.innerHTML = payload.reviews.map((review) => createDishReviewMarkup(review)).join('');
+      }
+
+      const currentUser = await db.getUser();
+      if (!currentUser) {
+        formEl.innerHTML = `
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
+          <p style="color: var(--muted-foreground); margin-bottom: 1rem;">Please log in to post a dish review.</p>
+          <a href="${pagePaths.loginPath}" class="btn btn-primary">Login to Review Dish</a>
+        `;
+        formEl.style.display = 'block';
+        return;
+      }
+
+      if (!document.getElementById('dish-rating-input')) {
+        formEl.innerHTML = `
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
+
+          <div class="form-group">
+            <label>Dish Rating</label>
+            <div id="dish-rating-selector"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="dish-review-comment">Your Dish Review</label>
+            <textarea id="dish-review-comment" placeholder="Share your thoughts about this specific dish..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit Dish Review</button>
+        `;
+      }
+
+      const ratingSelector = document.getElementById('dish-rating-selector');
+      if (ratingSelector) {
+        ratingSelector.innerHTML = createRatingSelector('dish-rating', 5);
+      }
+      formEl.style.display = 'block';
+    }
+
+    async function renderMenuAndDishReviews(restaurantId, preferredDishId = null) {
+      const menuGrid = document.getElementById('menu-grid');
+      const menuCount = document.getElementById('menu-count');
+      const dishSelect = document.getElementById('dish-review-filter');
+
+      dishMenuItems = await getDishMenuForRestaurant(restaurantId);
+      dishReviewCache = {};
+
+      if (!dishMenuItems || dishMenuItems.length === 0) {
+        menuCount.textContent = '0 dishes';
+        menuGrid.innerHTML = `
+          <div class="review-item">
+            <div class="review-text">No menu data available for this restaurant yet.</div>
+          </div>
+        `;
+        dishSelect.innerHTML = '<option value="">No dishes available</option>';
+        document.getElementById('dish-review-form').style.display = 'none';
+        document.getElementById('dish-rating-summary').innerHTML = '<div class="dish-summary-title">No dish data available.</div>';
+        document.getElementById('dish-reviews-list').innerHTML = '';
+        return;
+      }
+
+      const menuCards = await Promise.all(dishMenuItems.map(async (dish) => {
+        const reviewData = await loadDishReviewData(dish.id);
+        const avgRating = Number(reviewData.avgRating || 0);
+        return `
+          <article class="menu-card">
+            <div class="menu-card-head">
+              <h4>${dish.name}</h4>
+              <span class="menu-price">${formatDishPrice(dish.price)}</span>
+            </div>
+            <p>${dish.description || 'No description available.'}</p>
+            <div class="menu-rating">${renderStars(avgRating)} ${avgRating.toFixed(1)}/5 (${reviewData.totalReviews})</div>
+          </article>
+        `;
+      }));
+
+      menuGrid.innerHTML = menuCards.join('');
+      menuCount.textContent = `${dishMenuItems.length} dish${dishMenuItems.length === 1 ? '' : 'es'}`;
+
+      dishSelect.innerHTML = dishMenuItems.map((dish) => `<option value="${dish.id}">${dish.name}</option>`).join('');
+
+      const hasPreferred = preferredDishId && dishMenuItems.some((dish) => Number(dish.id) === Number(preferredDishId));
+      dishSelect.value = hasPreferred ? String(preferredDishId) : String(dishMenuItems[0].id);
+
+      await renderDishReviewsPanel();
+    }
+
+    async function handleDishReviewSelection() {
+      await renderDishReviewsPanel();
+    }
+
+    async function submitDishReview(event) {
+      event.preventDefault();
+
+      const user = await db.getUser();
+      if (!user) {
+        alert('Please login to submit a dish review');
+        window.location.href = pagePaths.loginPath;
+        return;
+      }
+
+      const token = db.getToken();
+      if (!token) {
+        alert('Please login again to continue.');
+        window.location.href = pagePaths.loginPath;
+        return;
+      }
+
+      const dishId = parseInt(document.getElementById('dish-review-filter').value, 10);
+      const comment = document.getElementById('dish-review-comment')?.value || '';
+      const rating = parseInt(document.getElementById('dish-rating-input')?.value, 10) || 5;
+
+      if (!dishId) {
+        alert('Please select a dish to review.');
+        return;
+      }
+
+      try {
+        await createDishReviewForDish(dishId, rating, comment, token);
+        delete dishReviewCache[dishId];
+        await renderMenuAndDishReviews(parseInt(getUrlParam('id'), 10), dishId);
+
+        const commentBox = document.getElementById('dish-review-comment');
+        if (commentBox) commentBox.value = '';
+        const ratingInput = document.getElementById('dish-rating-input');
+        if (ratingInput) ratingInput.value = '5';
+
+        alert('Dish review submitted successfully!');
+      } catch (error) {
+        alert(error.message || 'Failed to submit dish review');
+      }
+    }
+
     async function renderRestaurantDetail() {
       const restaurantId = getUrlParam('id');
       if (!restaurantId) {
@@ -206,6 +469,8 @@
       // Render Reviews from database
       const restaurantReviews = await getReviewsByRestaurantId(restaurant.id);
       renderReviews(restaurantReviews);
+
+      await renderMenuAndDishReviews(restaurant.id);
     }
 
     async function submitReview(event) {

@@ -828,6 +828,113 @@ input[type=range]:active::-webkit-slider-thumb {
   font-weight: 500;
 }
 
+.menu-section,
+.dish-reviews-section {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.menu-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: #fff;
+}
+
+.menu-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.menu-card-head h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.menu-card p {
+  color: var(--muted-foreground);
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.menu-price {
+  color: var(--primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.menu-rating {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dish-reviews-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.dish-reviews-heading h3 {
+  margin: 0;
+}
+
+.dish-review-controls {
+  min-width: 240px;
+}
+
+.dish-review-controls label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: var(--muted-foreground);
+}
+
+.dish-rating-summary {
+  border: 1px solid var(--border);
+  background: var(--muted);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.dish-summary-title {
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.dish-summary-metrics {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dish-summary-stars {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.dish-summary-count {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
 /* ============================================
    REVIEWS SECTION
    ============================================ */

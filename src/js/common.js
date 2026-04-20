@@ -406,6 +406,9 @@ function setupFilters() {
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
     }
+    if (typeof updateLiveLocationMarker === 'function') {
+      updateLiveLocationMarker();
+    }
   };
 
   if (searchInput) {

@@ -155,6 +155,65 @@ async function getDishesForRestaurant(restaurantId) {
   }
 }
 
+async function getDishMenuForRestaurant(restaurantId) {
+  try {
+    const response = await fetch(`${API_BASE}/dishes?placeId=${restaurantId}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Failed to fetch menu dishes for restaurant ${restaurantId}:`, error);
+    const rest = getRestaurantById(restaurantId);
+    if (!rest || !Array.isArray(rest.popularDishes)) return [];
+
+    return rest.popularDishes.map((dishName, index) => ({
+      id: restaurantId * 1000 + index + 1,
+      place_id: restaurantId,
+      name: dishName,
+      description: 'Popular dish',
+      price: null,
+      image_url: null,
+    }));
+  }
+}
+
+async function getDishReviewsByDishId(dishId) {
+  try {
+    const response = await fetch(`${API_BASE}/dish-reviews?dishId=${dishId}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn(`Failed to fetch dish reviews for dish ${dishId}:`, error);
+    return {
+      dishId,
+      avgRating: 0,
+      totalReviews: 0,
+      reviews: [],
+    };
+  }
+}
+
+async function createDishReviewForDish(dishId, rating, comment, token) {
+  const response = await fetch(`${API_BASE}/dish-reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      dishId,
+      rating,
+      comment,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to submit dish review');
+  }
+
+  return payload;
+}
+
 // Get all amenities for a restaurant
 async function getAmenitiesForRestaurant(restaurantId) {
   try {
@@ -261,6 +320,9 @@ if (typeof module !== 'undefined' && module.exports) {
     getRestaurantById,
     getReviewsByRestaurantId,
     getDishesForRestaurant,
+    getDishMenuForRestaurant,
+    getDishReviewsByDishId,
+    createDishReviewForDish,
     getAmenitiesForRestaurant,
     createReviewForRestaurant,
     submitHelpfulVote,
