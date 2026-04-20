@@ -66,7 +66,11 @@ async function fetchRestaurants(filters = {}) {
  */
 async function fetchReviews(placeId) {
   try {
-    const response = await fetch(`${API_BASE}/reviews?placeId=${placeId}`);
+    const token = db.getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await fetch(`${API_BASE}/reviews?placeId=${placeId}`, {
+      headers,
+    });
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     return await response.json();
   } catch (error) {

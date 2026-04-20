@@ -32,23 +32,61 @@ const pagePaths = (() => {
 // ============================================
 
 const db = {
+  getFavoritesKey() {
+    const user = this.getUser();
+    if (!user) return null;
+    const userScope = user.id || user.username || user.email;
+    return userScope ? `mapa-favorites-${userScope}` : null;
+  },
+
+  migrateLegacyFavorites() {
+    const key = this.getFavoritesKey();
+    if (!key) return;
+
+    const alreadyScoped = localStorage.getItem(key);
+    if (alreadyScoped) return;
+
+    const legacy = localStorage.getItem('mapa-favorites');
+    if (!legacy) return;
+
+    try {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed)) {
+        localStorage.setItem(key, JSON.stringify(parsed));
+      }
+    } catch (error) {
+      // Ignore bad legacy data.
+    }
+  },
+
   getFavorites() {
-    const favorites = localStorage.getItem('mapa-favorites');
+    const key = this.getFavoritesKey();
+    if (!key) return [];
+
+    this.migrateLegacyFavorites();
+
+    const favorites = localStorage.getItem(key);
     return favorites ? JSON.parse(favorites) : [];
   },
 
   saveFavorite(restaurantId) {
+    const key = this.getFavoritesKey();
+    if (!key) return;
+
     const favorites = this.getFavorites();
     if (!favorites.includes(restaurantId)) {
       favorites.push(restaurantId);
-      localStorage.setItem('mapa-favorites', JSON.stringify(favorites));
+      localStorage.setItem(key, JSON.stringify(favorites));
     }
   },
 
   removeFavorite(restaurantId) {
+    const key = this.getFavoritesKey();
+    if (!key) return;
+
     const favorites = this.getFavorites();
     const filtered = favorites.filter(id => id !== restaurantId);
-    localStorage.setItem('mapa-favorites', JSON.stringify(filtered));
+    localStorage.setItem(key, JSON.stringify(filtered));
   },
 
   isFavorite(restaurantId) {
@@ -189,16 +227,37 @@ async function toggleFavorite(restaurantId, button) {
     return;
   }
 
-  if (await db.isFavorite(restaurantId)) {
+  const isCurrentlyFavorited = await db.isFavorite(restaurantId);
+
+  if (isCurrentlyFavorited) {
     await db.removeFavorite(restaurantId);
-    button.textContent = '♡';
-    button.classList.remove('active');
+    if (button.classList.contains('favorite-btn')) {
+      button.textContent = '♡';
+      button.classList.remove('active');
+    } else {
+      button.textContent = '♡ Add to Favorites';
+      button.classList.remove('btn-primary');
+      button.classList.add('btn-outline');
+    }
   } else {
     await db.saveFavorite(restaurantId);
-    button.textContent = '♥';
-    button.classList.add('active');
+    if (button.classList.contains('favorite-btn')) {
+      button.textContent = '♥';
+      button.classList.add('active');
+    } else {
+      button.textContent = '♥ Favorited';
+      button.classList.remove('btn-outline');
+      button.classList.add('btn-primary');
+    }
+  }
+
+  if (window.location.pathname.endsWith('/favorites.html') && typeof renderFavorites === 'function') {
+    renderFavorites();
   }
 }
+
+// Backward-compat alias for pages still using `storage`.
+const storage = db;
 
 // ============================================
 // RESTAURANT GRID
@@ -349,7 +408,7 @@ function validateForm(formData) {
 // ============================================
 
 function createReviewItem(review) {
-  const hasHelpfulVote = localStorage.getItem(`mapa-helpful-review-${review.id}`) === 'true';
+  const hasHelpfulVote = !!review.hasHelpfulVote;
   const helpfulCount = Number(review.helpfulCount || 0);
 
   return `
@@ -365,8 +424,7 @@ function createReviewItem(review) {
       <button type="button"
               class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
               data-review-id="${review.id}"
-              onclick="markReviewHelpful(${review.id}, event)"
-              ${hasHelpfulVote ? 'disabled' : ''}>
+              onclick="markReviewHelpful(${review.id}, event)">
         👍 <span class="review-helpful-count">${helpfulCount}</span> found this helpful
       </button>
     </div>
@@ -390,7 +448,13 @@ async function markReviewHelpful(reviewId, event) {
 
   if (!button) return;
 
-  if (button.disabled) return;
+  const countEl = button.querySelector('.review-helpful-count');
+  const previousVoted = button.classList.contains('voted');
+  const previousCount = countEl ? Number(countEl.textContent || 0) : 0;
+  const optimisticVoted = !previousVoted;
+  const optimisticCount = optimisticVoted
+    ? previousCount + 1
+    : Math.max(previousCount - 1, 0);
 
   const user = await db.getUser();
   if (!user) {
@@ -407,19 +471,35 @@ async function markReviewHelpful(reviewId, event) {
   }
 
   try {
-    const payload = await submitHelpfulVote(reviewId, token);
-    localStorage.setItem(`mapa-helpful-review-${reviewId}`, 'true');
+    // Update instantly, then reconcile with server response.
+    button.classList.toggle('voted', optimisticVoted);
+    if (countEl) {
+      countEl.textContent = optimisticCount;
+    }
+    button.title = optimisticVoted
+      ? 'Click to remove your helpful vote'
+      : 'Click to mark this review as helpful';
+
     button.disabled = true;
-    button.classList.add('voted');
-    const countEl = button.querySelector('.review-helpful-count');
+    const payload = await submitHelpfulVote(reviewId, token);
+    button.classList.toggle('voted', !!payload.voted);
     if (countEl) {
       countEl.textContent = payload.helpfulCount;
     }
-    if (payload.alreadyMarked) {
-      button.title = 'You already marked this review as helpful';
-    }
+    button.title = payload.voted
+      ? 'Click to remove your helpful vote'
+      : 'Click to mark this review as helpful';
   } catch (error) {
+    button.classList.toggle('voted', previousVoted);
+    if (countEl) {
+      countEl.textContent = previousCount;
+    }
+    button.title = previousVoted
+      ? 'Click to remove your helpful vote'
+      : 'Click to mark this review as helpful';
     alert(error.message || 'Failed to mark review as helpful');
+  } finally {
+    button.disabled = false;
   }
 }
 
