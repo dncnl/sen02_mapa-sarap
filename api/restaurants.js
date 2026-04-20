@@ -9,7 +9,7 @@
  *   - openOnly: return only open restaurants
  */
 
-const { Client } = require('pg');
+const { sql } = require('@vercel/postgres');
 
 // Helper function to calculate average rating
 function calculateAverageRating(ratings) {
@@ -28,38 +28,23 @@ function calculateDistance(lat, lng) {
 }
 
 module.exports = async (req, res) => {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  });
-
   try {
-    await client.connect();
-
     // Fetch all places with ratings
-    const placesResult = await client.query(`
+    const placesResult = await sql`
       SELECT p.*, 
              COALESCE(AVG(r.rating), 0) as avg_rating,
              COUNT(r.id) as review_count
       FROM places p
       LEFT JOIN ratings r ON p.id = r.place_id
       GROUP BY p.id
-      ORDER BY p.id
-    `);
+      ORDER BY p.id;
+    `;
 
     // Fetch all amenities
-    const amenitiesResult = await client.query(`
-      SELECT place_id, array_agg(amenity) as amenities
-      FROM place_amenities
-      GROUP BY place_id
-    `);
+    const amenitiesResult = await sql`SELECT place_id, array_agg(amenity) as amenities FROM place_amenities GROUP BY place_id;`;
 
     // Fetch all dishes with names only
-    const dishesResult = await client.query(`
-      SELECT place_id, array_agg(name) as dishes
-      FROM dishes
-      GROUP BY place_id
-    `);
+    const dishesResult = await sql`SELECT place_id, array_agg(name) as dishes FROM dishes GROUP BY place_id;`;
 
     // Create lookup maps
     const amenitiesMap = {};
@@ -118,7 +103,5 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: error.message });
-  } finally {
-    await client.end();
   }
 };

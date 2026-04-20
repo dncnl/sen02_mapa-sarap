@@ -7,41 +7,11 @@ const API_BASE = '/api';
 // Fallback data for offline/development (same as seeded data)
 const FALLBACK_DATA = {
   restaurants: [
-    { id: 1, name: 'Jollibee AUF', cuisine: 'Filipino Fast Food', description: 'Popular Filipino fast food chain known for fried chicken and spaghetti.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.144760266478606, lng: 120.59528740862909, priceRange: '$', phone: '+63 45 888 1234', website: 'https://www.jollibee.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=Jollibee+AUF', hours: '7:00 AM - 10:00 PM', status: 'Open', rating: 4.5, reviewCount: 2, distance: '< 0.1 km', amenities: ['Drive Thru', 'Delivery'], popularDishes: ['Yumburger Combo', 'Champ Jr.', 'Super Meal C', 'Super Meal B', 'Super Meal A'] },
-    { id: 2, name: 'McDonald\'s Angeles Intersection', cuisine: 'American Fast Food', description: 'Global fast food chain offering burgers, fries, and breakfast meals.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.142816498032756, lng: 120.59631362397157, priceRange: '$', phone: '+63 45 888 2234', website: 'https://www.mcdonalds.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=McDonalds+Angeles', hours: '24 Hours', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['24/7 Service', 'Drive Thru'], popularDishes: ['Double Cheeseburger Meal', 'Cheeseburger Meal', 'Big Mac Meal', 'Quarter Pounder with Cheese Meal', 'Crispy Chicken Sandwich Meal'] },
-    { id: 3, name: '24 Chicken Angeles', cuisine: 'Korean', description: 'Korean-style fried chicken with flavorful sauces.', address: 'Angeles City, Pampanga', lat: 15.142285685420413, lng: 120.59696079513589, priceRange: '$$', phone: '+63 45 888 3234', website: 'https://www.facebook.com/24chickenph', imageUrl: 'https://via.placeholder.com/600x400?text=24+Chicken+Angeles', hours: '10:00 AM - 11:00 PM', status: 'Open', rating: 5.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Takeout', 'Indoor Seating'], popularDishes: ['Original Boneless Chicken', 'Yangnyeom w/ Garlic Boneless Chicken', 'Snow Cheese Boneless Chicken', 'Jack Daniels Boneless Chicken', 'Spicy BBQ Boneless Chicken'] },
-    { id: 4, name: 'Wall Street Wraps AUF', cuisine: 'Wraps and Rice Meals', description: 'Quick-service wraps and rice meals for students.', address: 'Near AUF, Angeles City, Pampanga', lat: 15.144080578526435, lng: 120.5957652922267, priceRange: '$', phone: '+63 45 888 4234', website: null, imageUrl: 'https://via.placeholder.com/600x400?text=Wall+Street+Wraps', hours: '8:00 AM - 9:00 PM', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Student Meals', 'Takeout'], popularDishes: ['Vegetarian Wrap (Jr.)', 'Uptown Caesar Wrap (Jr.)', 'Little Italy Wrap (Jr.)', 'Downtown Burrito Wrap (Jr.)', 'Thai Chili Express Wrap (Jr.)'] }
+    { id: 1, name: 'Jollibee AUF', cuisine: 'Filipino Fast Food', description: 'Popular Filipino fast food chain known for fried chicken and spaghetti.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.144760266478606, lng: 120.59528740862909, priceRange: '$', phone: '+63 45 888 1234', website: 'https://www.jollibee.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=Jollibee+AUF', hours: '7:00 AM - 10:00 PM', status: 'Open', rating: 4.5, reviewCount: 2, distance: '< 0.1 km', amenities: ['Drive Thru', 'Delivery'], popularDishes: ['Chickenjoy', 'Jolly Spaghetti'] },
+    { id: 2, name: 'McDonald\'s Angeles Intersection', cuisine: 'American Fast Food', description: 'Global fast food chain offering burgers, fries, and breakfast meals.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.142816498032756, lng: 120.59631362397157, priceRange: '$', phone: '+63 45 888 2234', website: 'https://www.mcdonalds.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=McDonalds+Angeles', hours: '24 Hours', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['24/7 Service', 'Drive Thru'], popularDishes: ['Big Mac', 'McChicken'] },
+    { id: 3, name: '24 Chicken Angeles', cuisine: 'Korean', description: 'Korean-style fried chicken with flavorful sauces.', address: 'Angeles City, Pampanga', lat: 15.142285685420413, lng: 120.59696079513589, priceRange: '$$', phone: '+63 45 888 3234', website: 'https://www.facebook.com/24chickenph', imageUrl: 'https://via.placeholder.com/600x400?text=24+Chicken+Angeles', hours: '10:00 AM - 11:00 PM', status: 'Open', rating: 5.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Takeout', 'Indoor Seating'], popularDishes: ['Yangnyeom Chicken', 'Snow Cheese Chicken'] },
+    { id: 4, name: 'Wall Street Wraps AUF', cuisine: 'Wraps and Rice Meals', description: 'Quick-service wraps and rice meals for students.', address: 'Near AUF, Angeles City, Pampanga', lat: 15.144080578526435, lng: 120.5957652922267, priceRange: '$', phone: '+63 45 888 4234', website: null, imageUrl: 'https://via.placeholder.com/600x400?text=Wall+Street+Wraps', hours: '8:00 AM - 9:00 PM', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Student Meals', 'Takeout'], popularDishes: ['Chicken Wrap', 'Beef Rice Meal'] }
   ],
-  dishMenus: {
-    1: [
-      { id: 1001, place_id: 1, name: 'Yumburger Combo', description: 'Classic Yumburger served with sides for a quick and satisfying meal.', price: 118.00, image_url: null },
-      { id: 1002, place_id: 1, name: 'Champ Jr.', description: 'A thicker, meatier burger option that still stays budget-friendly.', price: 183.00, image_url: null },
-      { id: 1003, place_id: 1, name: 'Super Meal C', description: 'Yumburger with half Jolly Spaghetti, regular fries, and a drink.', price: 129.00, image_url: null },
-      { id: 1004, place_id: 1, name: 'Super Meal B', description: 'Chickenjoy with half Jolly Spaghetti, regular fries, and a drink.', price: 180.00, image_url: null },
-      { id: 1005, place_id: 1, name: 'Super Meal A', description: 'Chickenjoy with half Jolly Spaghetti, rice, and a drink for bigger appetites.', price: 208.00, image_url: null },
-    ],
-    2: [
-      { id: 2001, place_id: 2, name: 'Double Cheeseburger Meal', description: 'Two beef patties with melted cheese, fries, and a drink in one value meal.', price: 237.00, image_url: null },
-      { id: 2002, place_id: 2, name: 'Cheeseburger Meal', description: 'McDonald\'s classic cheeseburger paired with fries and a refreshing drink.', price: 146.00, image_url: null },
-      { id: 2003, place_id: 2, name: 'Big Mac Meal', description: 'Iconic layered Big Mac served with fries and a drink.', price: 264.00, image_url: null },
-      { id: 2004, place_id: 2, name: 'Quarter Pounder with Cheese Meal', description: 'A juicy quarter-pound beef burger with cheese, fries, and a drink.', price: 264.00, image_url: null },
-      { id: 2005, place_id: 2, name: 'Crispy Chicken Sandwich Meal', description: 'Crispy chicken sandwich combo with fries and a drink for everyday cravings.', price: 157.00, image_url: null },
-    ],
-    3: [
-      { id: 3001, place_id: 3, name: 'Original Boneless Chicken', description: 'Crispy boneless fried chicken with a straightforward savory flavor.', price: 215.00, image_url: null },
-      { id: 3002, place_id: 3, name: 'Yangnyeom w/ Garlic Boneless Chicken', description: 'Sweet-spicy Korean glaze finished with garlic for a bold kick.', price: 230.00, image_url: null },
-      { id: 3003, place_id: 3, name: 'Snow Cheese Boneless Chicken', description: 'Boneless chicken dusted with creamy cheese powder for a rich finish.', price: 230.00, image_url: null },
-      { id: 3004, place_id: 3, name: 'Jack Daniels Boneless Chicken', description: 'Smoky-sweet sauce inspired by Jack Daniels flavoring on crispy chicken.', price: 220.00, image_url: null },
-      { id: 3005, place_id: 3, name: 'Spicy BBQ Boneless Chicken', description: 'Spicy barbecue-coated chicken with smoky notes and extra heat.', price: 220.00, image_url: null },
-    ],
-    4: [
-      { id: 4001, place_id: 4, name: 'Vegetarian Wrap (Jr.)', description: 'A fresh meat-free wrap with customizable vegetables, dressing, and seasoning.', price: 129.00, image_url: null },
-      { id: 4002, place_id: 4, name: 'Uptown Caesar Wrap (Jr.)', description: 'Grilled chicken Caesar wrap with parmesan, croutons, and romaine.', price: 149.00, image_url: null },
-      { id: 4003, place_id: 4, name: 'Little Italy Wrap (Jr.)', description: 'Italian-style wrap with roasted peppers, onions, and a herby dressing.', price: 149.00, image_url: null },
-      { id: 4004, place_id: 4, name: 'Downtown Burrito Wrap (Jr.)', description: 'Hearty burrito-style wrap with rice, beans, cheese, and Mexican sauce.', price: 149.00, image_url: null },
-      { id: 4005, place_id: 4, name: 'Thai Chili Express Wrap (Jr.)', description: 'Thai-inspired wrap with chili ginger sauce and sesame notes.', price: 149.00, image_url: null },
-    ],
-  },
   reviews: [
     { id: 1, restaurantId: 1, userName: 'marias', rating: 5, comment: 'Chickenjoy is still the best comfort meal near campus.', date: '2026-04-14 08:30:00', helpfulCount: 12 },
     { id: 2, restaurantId: 2, userName: 'juancruz', rating: 4, comment: 'Fast service and reliable breakfast options before class.', date: '2026-04-12 03:00:00', helpfulCount: 9 },
@@ -82,6 +52,8 @@ async function fetchRestaurants(filters = {}) {
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     
     const data = await response.json();
+    if (!Array.isArray(data)) throw new Error('Expected array of restaurants');
+    
     // Ensure coordinates are mapped correctly if API uses database column names
     restaurants = data.map(r => ({
       ...r,
@@ -301,11 +273,6 @@ async function getDishMenuForRestaurant(restaurantId) {
     return await response.json();
   } catch (error) {
     console.warn(`Failed to fetch menu dishes for restaurant ${restaurantId}:`, error);
-    const fallbackMenu = FALLBACK_DATA.dishMenus[restaurantId];
-    if (Array.isArray(fallbackMenu) && fallbackMenu.length) {
-      return fallbackMenu;
-    }
-
     const rest = getRestaurantById(restaurantId);
     if (!rest || !Array.isArray(rest.popularDishes)) return [];
 
