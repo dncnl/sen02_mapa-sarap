@@ -1,22 +1,65 @@
-# MAPA-Sarap - Restaurant Discovery Platform
+# 🍽️ MAPA-Sarap - Restaurant Discovery Platform
 
 
-## 🚀 Getting Started
-- Install dependencies: `npm install`
-- Create `.env.local` and set:
-	- `DATABASE_URL=your_neon_connection_string`
-- Start local app + API: `npm run dev`
-- Open: `http://localhost:3000`
+A modern food discovery application para mas **MAPA-Sarap**, ang kain near AUF and beyond!
+---
 
-## Deploy To GitHub + Vercel
-- Push your code to GitHub.
-- Import the GitHub repository into Vercel.
-- In Vercel Project Settings -> Environment Variables, add:
-	- `DATABASE_URL` = your Neon PostgreSQL URL
-- Redeploy the project.
+## 📋 Table of Contents
 
-## Notes
-- Do not commit `.env.local`.
-- API routes are available under `/api/*`.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
 
-Made with ❤️ for AUF | 2026
+---
+
+## ✨ Features
+
+- 🔍 **Restaurant Discovery** - Browse and search restaurants with detailed information
+- ⭐ **Ratings & Reviews** - Rate restaurants and dishes, share detailed reviews
+- 🗺️ **Location-Based Search** - Find restaurants near you with GPS coordinates
+- 🍛 **Dish Catalog** - View and review individual dishes at restaurants
+- 👤 **User Profiles** - Maintain personal user accounts and review history
+- ❤️ **Favorites** - Save your favorite restaurants for quick access
+- 🤖 **AI-Powered Features** - SarapBot, our own chatbot for enhanced recommendations
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Responsive Web Design
+
+### Backend
+- **Node.js** (v24.x) - Runtime environment
+- **Vercel Functions** - Serverless API endpoints
+- **PostgreSQL** - Database (Vercel Postgres)
+- **Express.js** - API routing
+- **JWT** - Authentication tokens
+- **bcryptjs** - Password hashing
+
+### External APIs
+- **Google Generative AI** - AI recommendations and content generation
+- **Vercel Postgres** - Managed PostgreSQL database
+
+---
+
+## 📋 Prerequisites
+
+Before getting started, ensure you have the following installed:
+
+- **Node.js** v24.x or higher - [Download](https://nodejs.org/)
+- **npm** (comes with Node.js)
+- **PostgreSQL** (optional, for local testing; we use Vercel Postgres in production)
+- **Git** - [Download](https://git-scm.com/)
+
+---
+
+## 🙏 Acknowledgments
+
+Made with ❤️ for **Angeles University Foundation** | 2026
+
+**Repository:** https://github.com/dncnl/sen02_mapa-sarap
