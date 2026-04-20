@@ -3,10 +3,10 @@
 // Fetches from backend API endpoints
 // ============================================
 
-// API base URL - works on both localhost and production
-const API_BASE = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000/api'
-  : '/api';
+// This automatically detects if you are on your PC or on Vercel
+const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+    ? 'https://mapa-sarap.vercel.app/api' 
+    : '/api'; 
 
 // Fallback data for offline/development (same as seeded data)
 const FALLBACK_DATA = {
@@ -46,6 +46,9 @@ async function fetchRestaurants(filters = {}) {
     if (filters.priceRange) params.append('priceRange', filters.priceRange);
     if (filters.minRating) params.append('minRating', filters.minRating);
     if (filters.openOnly) params.append('openOnly', filters.openOnly);
+    if (filters.lat) params.append('lat', filters.lat);
+    if (filters.lng) params.append('lng', filters.lng);
+    if (filters.radius) params.append('radius', filters.radius);
 
     const response = await fetch(`${API_BASE}/restaurants?${params}`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
