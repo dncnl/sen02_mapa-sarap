@@ -1,6 +1,10 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { sql } = require("@vercel/postgres");
 
+let cachedContext = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 60000; // 60 seconds
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -14,31 +18,41 @@ module.exports = async (req, res) => {
 
   let contextText = "Database is temporarily unavailable.";
 
-  // Fetch real data (no cache for now - simple & reliable)
   try {
-    const result = await sql`
-      SELECT 
-        p.id, p.name, p.cuisine, p.price_range, p.is_open, 
-        p.address, p.latitude, p.longitude,
-        COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) as avg_rating,
-        COUNT(r.id) as review_count,
-        STRING_AGG(DISTINCT d.name, ', ') as popular_dishes
-      FROM places p
-      LEFT JOIN ratings r ON r.place_id = p.id
-      LEFT JOIN dishes d ON d.place_id = p.id
-      GROUP BY p.id, p.name, p.cuisine, p.price_range, p.is_open, p.address, p.latitude, p.longitude
-      ORDER BY avg_rating DESC NULLS LAST
-      LIMIT 20;
-    `;
+    const now = Date.now();
 
-    contextText = result.rows.map(p => `
+    // USE CACHE if still valid
+    if (cachedContext && (now - lastFetchTime < CACHE_TTL)) {
+      contextText = cachedContext;
+    } else {
+      const result = await sql`
+        SELECT 
+          p.id, p.name, p.cuisine, p.price_range, p.is_open, 
+          p.address,
+          COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) as avg_rating,
+          COUNT(r.id) as review_count,
+          STRING_AGG(DISTINCT d.name, ', ') as popular_dishes
+        FROM places p
+        LEFT JOIN ratings r ON r.place_id = p.id
+        LEFT JOIN dishes d ON d.place_id = p.id
+        GROUP BY p.id, p.name, p.cuisine, p.price_range, p.is_open, p.address
+        ORDER BY avg_rating DESC NULLS LAST
+        LIMIT 20;
+      `;
+
+      contextText = result.rows.map(p => `
 • ${p.name} (${p.cuisine})
   Rating: ${p.avg_rating}★ (${p.review_count} reviews)
   Price: ${p.price_range || 'N/A'} | ${p.is_open ? '✅ Open Now' : '🔴 Closed'}
   Popular dishes: ${p.popular_dishes || 'N/A'}
   Address: ${p.address}
   ID: ${p.id}
-    `).join('\n\n');
+      `).join('\n\n');
+
+      // SAVE CACHE
+      cachedContext = contextText;
+      lastFetchTime = now;
+    }
 
   } catch (err) {
     console.error("Database error:", err.message);
@@ -61,7 +75,6 @@ Rules:
 </div>
 `;
 
-  // Try models with fallback
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
   for (const modelName of models) {
@@ -84,8 +97,7 @@ Rules:
     }
   }
 
-  // Friendly fallback
   return res.status(200).json({
-    text: "SarapBot is a bit busy right now 😅 Try asking me again in a few seconds!"
+    text: "SarapBot is a bit busy right now 😅 Try again in a few seconds!"
   });
 };
