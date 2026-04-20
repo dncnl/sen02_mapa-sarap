@@ -41,6 +41,7 @@ async function getUserLocation() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
         window.liveLocationCoordinates = userCoords;
         resolve(userCoords);
       },
@@ -139,19 +140,37 @@ const db = {
   saveAuthSession(user, token) {
     this.saveUser(user);
     localStorage.setItem('mapa-token', token);
+    // Backward compatibility for older builds that used a generic token key.
+    localStorage.setItem('token', token);
   },
 
   getToken() {
-    return localStorage.getItem('mapa-token');
+    const token = localStorage.getItem('mapa-token')
+      || localStorage.getItem('token')
+      || localStorage.getItem('auth-token')
+      || localStorage.getItem('mapa-auth-token');
+
+    if (token && !localStorage.getItem('mapa-token')) {
+      localStorage.setItem('mapa-token', token);
+    }
+
+    return token;
+  },
+
+  hasValidSession() {
+    return this.getUser() !== null && !!this.getToken();
   },
 
   logout() {
     localStorage.removeItem('mapa-user');
     localStorage.removeItem('mapa-token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('mapa-auth-token');
   },
 
   isLoggedIn() {
-    return this.getUser() !== null;
+    return this.hasValidSession();
   }
 };
 
@@ -188,7 +207,7 @@ function updateHeaderAuth() {
 
   let html = '';
 
-  if (user) {
+  if (user && token) {
     html = `
       <span class="text-sm text-muted-foreground">Hello, ${user.name || user.username || 'User'}!</span>
       <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
@@ -278,14 +297,13 @@ async function createRestaurantCard(restaurant) {
   let distanceHtml = '';
   const locationRef = document.getElementById('location-reference')?.value || 'auf-main';
   const basisContext = getRestaurantFilterContext();
-  const isLiveReference = locationRef === 'live-location' || locationRef === 'me';
-  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+  const basisLocation = typeof basisContext.getBasisLocationById === 'function'
     ? basisContext.getBasisLocationById(locationRef)
     : null;
   
   // Determine which coordinates to use for display
-  const refCoords = (isLiveReference && userCoords) ? userCoords : (basisLocation || AUF_COORDS);
-  const refLabel = (isLiveReference && userCoords) ? 'you' : (basisLocation?.name || 'AUF');
+  const refCoords = basisLocation || AUF_COORDS;
+  const refLabel = basisLocation?.name || 'AUF';
 
   const dist = calculateDistance(refCoords.lat, refCoords.lng, restaurant.lat, restaurant.lng);
   const walkTime = Math.round((dist / 5) * 60);
@@ -431,12 +449,10 @@ function filterRestaurants() {
   const radiusKm = parseFloat(document.getElementById('distance-slider')?.value || window.liveLocationRadiusKm || 5);
 
   const basisContext = getRestaurantFilterContext();
-  const liveLocation = userCoords || basisContext.liveLocation || window.liveLocationCoordinates || null;
-  const isLiveReference = locationReference === 'live-location' || locationReference === 'me';
-  const basisLocation = !isLiveReference && typeof basisContext.getBasisLocationById === 'function'
+  const basisLocation = typeof basisContext.getBasisLocationById === 'function'
     ? basisContext.getBasisLocationById(locationReference)
     : null;
-  const anchor = isLiveReference ? liveLocation : (basisLocation || AUF_COORDS);
+  const anchor = basisLocation || AUF_COORDS;
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -528,9 +544,6 @@ function setupFilters() {
     
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
-    }
-    if (typeof updateLiveLocationMarker === 'function') {
-      updateLiveLocationMarker();
     }
   };
 

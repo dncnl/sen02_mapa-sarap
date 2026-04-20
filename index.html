@@ -147,7 +147,6 @@
               <option value="auf-ps">Angeles University Foundation PS Building</option>
               <option value="auf-eya">Angeles University Foundation EYA Building</option>
               <option value="auf-scc">Angeles University Foundation SCC</option>
-              <option value="live-location">Live Location</option>
             </select>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 6px;">
               <span id="active-basis-indicator" style="font-size: 0.6rem; background: #22c55e; color: white; padding: 3px 10px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: nowrap;" aria-live="polite">Active: Main Building</span>
@@ -236,7 +235,6 @@
     let map;
     let restaurantMarkers = [];
     let basisMarkers = [];
-    let liveLocationMarker = null;
 
     const basisLocations = [
       {
@@ -266,7 +264,6 @@
     ];
 
     const LIVE_LOCATION_RADIUS_KM = 5;
-    window.liveLocationCoordinates = null;
     window.liveLocationRadiusKm = LIVE_LOCATION_RADIUS_KM;
 
     function getBasisLocationById(basisId) {
@@ -276,7 +273,6 @@
     window.getRestaurantFilterContext = function getRestaurantFilterContext() {
       return {
         radiusKm: LIVE_LOCATION_RADIUS_KM,
-        liveLocation: window.liveLocationCoordinates,
         getBasisLocationById,
       };
     };
@@ -291,19 +287,8 @@
       shadowSize: [41, 41],
     });
 
-    const defaultMarkerIcon = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
-    });
-
     function getSelectedBasis() {
       const locationReference = document.getElementById('location-reference')?.value || 'auf-main';
-      if (locationReference === 'me') return 'live-location';
       if (locationReference === 'auf') return 'auf-main';
       return locationReference;
     }
@@ -315,12 +300,11 @@
       const previousValue = getSelectedBasis();
       const optionsHtml = [
         ...basisLocations.map((location) => `<option value="${location.id}">${location.name}</option>`),
-        '<option value="live-location">Live Location</option>',
       ].join('');
 
       locationReference.innerHTML = optionsHtml;
 
-      const hasPrevious = basisLocations.some((location) => location.id === previousValue) || previousValue === 'live-location';
+      const hasPrevious = basisLocations.some((location) => location.id === previousValue);
       locationReference.value = hasPrevious ? previousValue : 'auf-main';
       updateActiveBasisIndicator();
     }
@@ -341,20 +325,6 @@
       if (!activeBasisIndicator) return;
 
       activeBasisIndicator.textContent = `Active: ${getSelectedBasisName()}`;
-    }
-
-    function syncLiveLocationMarkerState() {
-      if (!map || !liveLocationMarker) return;
-
-      const isLiveBasis = getSelectedBasis() === 'live-location';
-      if (isLiveBasis) {
-        liveLocationMarker.setIcon(greenMarkerIcon);
-        if (!map.hasLayer(liveLocationMarker)) {
-          liveLocationMarker.addTo(map);
-        }
-      } else if (map.hasLayer(liveLocationMarker)) {
-        map.removeLayer(liveLocationMarker);
-      }
     }
 
     function createMarker(lat, lng, popupHtml, icon) {
@@ -412,7 +382,6 @@
           }).addTo(map);
         }
         updateMapMarkers();
-        updateLiveLocationMarker();
       } else {
         gridSection.style.display = 'block';
         mapSection.style.display = 'none';
@@ -429,9 +398,7 @@
       basisMarkers = [];
 
       const selectedBasisId = getSelectedBasis();
-      const selectedBasis = selectedBasisId === 'live-location'
-        ? null
-        : getBasisLocationById(selectedBasisId);
+      const selectedBasis = getBasisLocationById(selectedBasisId);
       updateActiveBasisIndicator();
 
       if (selectedBasis) {
@@ -447,8 +414,6 @@
         const marker = createMarker(selectedBasis.lat, selectedBasis.lng, popupHtml, greenMarkerIcon);
         basisMarkers.push(marker);
       }
-
-      syncLiveLocationMarkerState();
 
       const filtered = filterRestaurants();
       filtered.forEach(r => {
@@ -475,58 +440,11 @@
       const fitMarkers = [
         ...basisMarkers,
         ...restaurantMarkers,
-        ...(liveLocationMarker && map.hasLayer(liveLocationMarker) ? [liveLocationMarker] : []),
       ];
       if (fitMarkers.length > 0) {
         const group = new L.featureGroup(fitMarkers);
         map.fitBounds(group.getBounds().pad(0.1));
       }
-    }
-
-    function updateLiveLocationMarker() {
-      if (!map || !navigator.geolocation) return;
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          const isLiveBasis = getSelectedBasis() === 'live-location';
-          window.liveLocationCoordinates = { lat, lng };
-          if (typeof userCoords !== 'undefined') {
-            userCoords = { lat, lng };
-          }
-          const popupHtml = `
-            <b>Your Live Location</b><br>
-            <span style="font-size: 0.875rem; color: #666;">
-              Current position${isLiveBasis ? '<br><span style="display: inline-block; margin-top: 0.2rem; color: #0f766e; font-weight: 600;">Active basis</span>' : ''}
-            </span>
-          `;
-
-          if (liveLocationMarker) {
-            liveLocationMarker.setLatLng([lat, lng]);
-            liveLocationMarker.setPopupContent(popupHtml);
-            syncLiveLocationMarkerState();
-
-            if (isLiveBasis && typeof window.refreshRestaurantResults === 'function') {
-              window.refreshRestaurantResults();
-            }
-
-            return;
-          }
-
-          liveLocationMarker = L.marker([lat, lng], { icon: isLiveBasis ? greenMarkerIcon : defaultMarkerIcon })
-            .bindPopup(popupHtml)
-            .addTo(map);
-
-          if (isLiveBasis && typeof window.refreshRestaurantResults === 'function') {
-            window.refreshRestaurantResults();
-          }
-        },
-        () => {
-          // Ignore permission or location errors silently.
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

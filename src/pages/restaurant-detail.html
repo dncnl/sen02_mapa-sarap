@@ -139,7 +139,7 @@
       if (price === null || price === undefined || price === '') return 'Price not listed';
       const numericPrice = Number(price);
       if (Number.isNaN(numericPrice)) return 'Price not listed';
-      return `PHP ${numericPrice.toFixed(2)}`;
+      return `₱${numericPrice.toFixed(2)}`;
     }
 
     function getDishNameById(dishId) {
@@ -221,8 +221,9 @@
         listEl.innerHTML = payload.reviews.map((review) => createDishReviewMarkup(review)).join('');
       }
 
-      const currentUser = await db.getUser();
-      if (!currentUser) {
+      const currentUser = db.getUser();
+      const token = db.getToken();
+      if (!currentUser || !token) {
         formEl.innerHTML = `
           <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
           <p style="color: var(--muted-foreground); margin-bottom: 1rem;">Please log in to post a dish review.</p>
@@ -321,7 +322,7 @@
 
       const token = db.getToken();
       if (!token) {
-        alert('Please login again to continue.');
+        alert('Authentication needed. Please log in again to continue.');
         window.location.href = pagePaths.loginPath;
         return;
       }
@@ -466,9 +467,10 @@
       const ratingSelector = document.getElementById('rating-selector');
       ratingSelector.innerHTML = createRatingSelector('review-rating', 5);
 
-      const currentUser = await db.getUser();
+      const currentUser = db.getUser();
+      const token = db.getToken();
       const reviewForm = document.getElementById('review-form');
-      if (currentUser) {
+      if (currentUser && token) {
         document.getElementById('review-name').value = currentUser.name || currentUser.username || '';
       } else {
         reviewForm.innerHTML = `
@@ -481,8 +483,18 @@
       // Render Reviews from database
       const restaurantReviews = await getReviewsByRestaurantId(restaurant.id);
       renderReviews(restaurantReviews);
+      removeLegacyWriteReviewButtons();
 
       await renderMenuAndDishReviews(restaurant.id);
+    }
+
+    function removeLegacyWriteReviewButtons() {
+      document.querySelectorAll('button, a').forEach((el) => {
+        const text = (el.textContent || '').trim().toLowerCase();
+        if (text === 'write a review' || text === 'write review') {
+          el.remove();
+        }
+      });
     }
 
     async function submitReview(event) {
@@ -497,7 +509,7 @@
 
       const token = db.getToken();
       if (!token) {
-        alert('Please login again to continue.');
+        alert('Authentication needed. Please log in again to continue.');
         window.location.href = pagePaths.loginPath;
         return;
       }
@@ -528,6 +540,7 @@
       await initializeData();
       renderRestaurantDetail();
       setupHeader();
+      removeLegacyWriteReviewButtons();
     });
   </script>
 </body>
