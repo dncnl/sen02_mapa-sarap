@@ -126,8 +126,17 @@
           body: JSON.stringify({ email, password })
         });
 
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Login failed');
+        const responseText = await response.text();
+        let payload;
+        try {
+          payload = JSON.parse(responseText);
+        } catch (e) {
+          payload = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(payload?.error || payload?.details || `Error ${response.status}: ${responseText.substring(0, 50)}`);
+        }
 
         db.saveAuthSession(payload.user, payload.token);
         alert(`Welcome back, ${payload.user.name || payload.user.username}!`);

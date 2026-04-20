@@ -78,8 +78,17 @@ async function loginUser(email, password) {
       body: JSON.stringify({ email, password })
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Login failed');
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || data?.details || `Server Error ${response.status}`);
+    }
 
     // Save session using the helper in common.js
     db.saveAuthSession(data.user, data.token);

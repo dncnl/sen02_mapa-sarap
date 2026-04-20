@@ -7,13 +7,14 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, email, password } = req.body; // Maps 'name' from frontend
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'All fields (name, email, password) are required' });
-  }
-
   try {
+    // Destructure inside try-catch to handle potential null req.body
+    const { name, email, password } = req.body || {};
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'All fields (name, email, password) are required' });
+    }
+
     // Check if user already exists
     const existing = await sql`SELECT id FROM users WHERE email = ${email} OR username = ${name}`;
     if (existing.rows.length > 0) {

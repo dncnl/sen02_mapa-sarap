@@ -7,13 +7,14 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body; // 'email' serves as the identifier (Email or Username)
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email/Username and password are required' });
-  }
-
   try {
+    // Destructure inside try-catch to handle potential null req.body
+    const { email, password } = req.body || {};
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email/Username and password are required' });
+    }
+
     const { rows } = await sql`
       SELECT id, username, email, password_hash, role 
       FROM users 
