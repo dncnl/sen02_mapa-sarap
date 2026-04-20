@@ -122,18 +122,6 @@
             <label for="open-only-filter" style="font-weight: 600; font-size: 0.875rem; cursor: pointer; color: var(--success);">Open Now</label>
           </div>
 
-          <!-- Basis Selector -->
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label for="basis-filter" style="font-weight: 500; font-size: 0.875rem;">Basis</label>
-            <select id="basis-filter" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.375rem; background: white;">
-              <option value="all">All Basis Markers</option>
-              <option value="auf-main">AUF Main Building</option>
-              <option value="auf-ps">AUF PS Building</option>
-              <option value="auf-eya">AUF EYA Building</option>
-              <option value="auf-scc">AUF SCC</option>
-              <option value="live-location">Live Location</option>
-            </select>
-          </div>
         </div>
       </div>
     </section>
@@ -239,7 +227,8 @@
     });
 
     function getSelectedBasis() {
-      return document.getElementById('basis-filter')?.value || 'all';
+      const locationReference = document.getElementById('location-reference')?.value || 'auf';
+      return locationReference === 'me' ? 'live-location' : 'auf-main';
     }
 
     function syncLiveLocationMarkerState() {
@@ -319,8 +308,6 @@
 
     function updateMapMarkers() {
       if (!map) return;
-      const selectedBasis = getSelectedBasis();
-
       restaurantMarkers.forEach(marker => map.removeLayer(marker));
       basisMarkers.forEach(marker => map.removeLayer(marker));
       restaurantMarkers = [];
@@ -333,26 +320,19 @@
             Basis campus indicator
           </span>
         `;
-        const markerIcon = selectedBasis === location.id ? greenMarkerIcon : defaultMarkerIcon;
+        const markerIcon = defaultMarkerIcon;
         const marker = createMarker(location.lat, location.lng, popupHtml, markerIcon);
         basisMarkers.push(marker);
       });
 
-      // Add user location marker if available for real-time reference
-      if (userCoords) {
-        const userLocMarker = L.circleMarker([userCoords.lat, userCoords.lng], {
-          radius: 8,
-          fillColor: "#3b82f6",
-          color: "white",
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8
-        }).addTo(map).bindPopup("You are here");
-        markers.push(userLocMarker);
-      }
+      syncLiveLocationMarkerState();
 
       const filtered = filterRestaurants();
       filtered.forEach(r => {
+        if (!Number.isFinite(Number(r.lat)) || !Number.isFinite(Number(r.lng))) {
+          return;
+        }
+
         const markerHtml = `
           <b>${r.name}</b><br>
           <span style="font-size: 0.875rem; color: #666;">
@@ -383,7 +363,11 @@
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          const isLiveBasis = getSelectedBasis() === 'live-location';
           window.liveLocationCoordinates = { lat, lng };
+          if (typeof userCoords !== 'undefined') {
+            userCoords = { lat, lng };
+          }
           const popupHtml = `
             <b>Your Live Location</b><br>
             <span style="font-size: 0.875rem; color: #666;">
@@ -403,7 +387,6 @@
             return;
           }
 
-          const isLiveBasis = getSelectedBasis() === 'live-location';
           liveLocationMarker = L.marker([lat, lng], { icon: isLiveBasis ? greenMarkerIcon : defaultMarkerIcon })
             .bindPopup(popupHtml)
             .addTo(map);
