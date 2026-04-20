@@ -309,7 +309,7 @@ function filterRestaurants() {
 
 function setupFilters() {
   const searchInput = document.getElementById('search-input');
-  const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter'];
+  const filters = ['cuisine-filter', 'price-filter', 'rating-filter', 'open-only-filter', 'basis-filter'];
 
   const updateResults = () => {
     const filtered = filterRestaurants();
@@ -317,6 +317,9 @@ function setupFilters() {
     // Update map markers if map is visible
     if (typeof updateMapMarkers === 'function') {
       updateMapMarkers();
+    }
+    if (typeof updateLiveLocationMarker === 'function') {
+      updateLiveLocationMarker();
     }
   };
 
