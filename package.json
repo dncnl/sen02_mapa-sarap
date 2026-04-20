@@ -2,11 +2,11 @@
   "name": "mapa-sarap",
   "version": "1.0.0",
   "description": "MAPA-Sarap - Food Discovery App for Angeles University Foundation",
-"scripts": {
-  "dev": "echo 'Vercel is running'",
-  "build": "echo 'Building static assets'",
-  "start": "echo 'Vercel is running'"
-},
+  "scripts": {
+    "dev": "echo 'Vercel is running'",
+    "build": "echo 'Building static assets'",
+    "start": "echo 'Vercel is running'"
+  },
   "keywords": [
     "food",
     "discovery",
@@ -16,11 +16,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.11.3"
   },
-  "devDependencies": {},
   "engines": {
     "node": "24.x"
   }
