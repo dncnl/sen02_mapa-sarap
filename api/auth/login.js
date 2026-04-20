@@ -9,16 +9,16 @@ module.exports = async (req, res) => {
 
   try {
     // Destructure inside try-catch to handle potential null req.body
-    const { email, password } = req.body || {};
+    const { name, password } = req.body || {};
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email/Username and password are required' });
+    if (!name || !password) {
+      return res.status(400).json({ error: 'Name and password are required' });
     }
 
     const { rows } = await sql`
       SELECT id, username, email, password_hash, role 
       FROM users 
-      WHERE email = ${email} OR username = ${email}
+      WHERE email = ${name} OR username = ${name}
       LIMIT 1
     `;
 

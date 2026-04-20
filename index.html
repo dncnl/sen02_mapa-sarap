@@ -6,7 +6,71 @@
   <title>MAPA-Sarap - Discover Amazing Food</title>
   
   <!-- Styles -->
-  <link rel="stylesheet" href="src/css/styles.css">
+  <link rel="stylesheet" href="/src/css/styles.css">
+
+  <!-- Emergency Chatbot UI Reset -->
+  <style>
+    #chat-widget * {
+      box-sizing: border-box;
+    }
+    .chat-window {
+      display: none;
+      flex-direction: column !important;
+    }
+    .chat-header, .chat-content, .chat-input-area {
+      flex-shrink: 0;
+    }
+    .chat-thinking {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      font-size: 0.8rem;
+      color: var(--muted-foreground);
+      background: #fafafa;
+    }
+    .chat-input-area {
+      padding: 12px 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .chat-send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .chat-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+    .chat-quick-actions {
+      padding: 10px 15px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      background: #fafafa;
+      border-top: 1px solid #f5f5f5;
+    }
+  </style>
   
   <!-- Leaflet Map (Free, No API Key) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -163,7 +227,7 @@
   </div>
 
   <footer>
-    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+    <p>&copy; 2026 MAPA-Sarap. All rights reserved.</p>
   </footer>
 
   <script src="src/js/data.js"></script>
@@ -472,6 +536,146 @@
       setupHeader();
       setupFilters();
     });
+  </script>
+
+<!-- SarapBot AI Widget -->
+<div id="chat-widget" class="chat-widget">
+  <button id="bot-launcher" class="bot-launcher" aria-label="Open SarapBot">
+    <div class="launcher-content">
+      <img src="/src/assets/robot-face-svgrepo-com.svg" class="bot-svg-icon" alt="Bot">
+      <span class="bot-status">Online</span>
+    </div>
+  </button>
+
+  <div id="chat-window" class="chat-window">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <img src="/src/assets/robot-face-svgrepo-com.svg" class="header-svg-icon" alt="Bot">
+        </div>
+        <div>
+          <div class="chat-name">SarapBot</div>
+          <div class="chat-subtitle">Your AUF Food Assistant • Always Hungry</div>
+        </div>
+      </div>
+      <button id="chat-close" class="chat-close">✕</button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-content" class="chat-content"></div>
+
+    <!-- Typing Indicator -->
+    <div id="chat-thinking" class="chat-thinking">
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span>SarapBot is tasting suggestions...</span>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="chat-quick-actions">
+      <div class="action-chip" onclick="handleQuickAction('Best sisig near me')">Best Sisig</div>
+      <div class="action-chip" onclick="handleQuickAction('Cheap eats under ₱100')">Under ₱100</div>
+      <div class="action-chip" onclick="handleQuickAction('Good for group study')">Study Spots</div>
+      <div class="action-chip" onclick="handleQuickAction('Open now near PS Building')">Open Now</div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="What are you craving today?" autocomplete="off">
+      <button id="chat-send-btn" class="chat-send-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+  <script>
+    let chatHistory = [];
+
+    // Initialize listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      const launcher = document.getElementById('bot-launcher');
+      const closeBtn = document.getElementById('chat-close');
+      const sendBtn = document.getElementById('chat-send-btn');
+      const input = document.getElementById('chat-input');
+
+      if (launcher) launcher.onclick = toggleChat;
+      if (closeBtn) closeBtn.onclick = toggleChat;
+      if (sendBtn) sendBtn.onclick = sendChat;
+      if (input) {
+        input.onkeypress = (e) => { if (e.key === 'Enter') sendChat(); };
+      }
+
+      // Welcome Message
+      const content = document.getElementById('chat-content');
+      if (content && content.children.length === 0) {
+        content.innerHTML = `<div class="chat-bubble-bot">Mabuhay! I'm SarapBot. 🍜 Looking for a specific restaurant or a budget-friendly meal near AUF? Ask me anything!</div>`;
+      }
+    });
+
+    function toggleChat() {
+      const win = document.getElementById('chat-window');
+      const isHidden = !win.style.display || win.style.display === 'none';
+      
+      win.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) {
+        setTimeout(() => document.getElementById('chat-input').focus(), 200);
+      }
+    }
+
+    function handleQuickAction(text) {
+      document.getElementById('chat-input').value = text;
+      sendChat();
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const content = document.getElementById('chat-content');
+      const thinking = document.getElementById('chat-thinking');
+      const text = input.value.trim();
+      
+      if (!text) return;
+
+      // User Message
+      content.innerHTML += `<div class="chat-bubble-user">${text}</div>`;
+      input.value = '';
+      content.scrollTop = content.scrollHeight;
+      
+      // Add to local history for context awareness
+      const userEntry = { role: "user", parts: [{ text: text }] };
+
+      thinking.style.display = 'flex';
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: text,
+            history: chatHistory 
+          })
+        });
+        
+        const data = await res.json();
+        thinking.style.display = 'none';
+        
+        // Bot Message
+        content.innerHTML += `<div class="chat-bubble-bot">${data.text}</div>`;
+        content.scrollTop = content.scrollHeight;
+
+        // Update history with both turns
+        chatHistory.push(userEntry);
+        chatHistory.push({ role: "model", parts: [{ text: data.text }] });
+
+      } catch (e) {
+        thinking.style.display = 'none';
+        content.innerHTML += `<div style="color: #ef4444; font-size: 12px; text-align: center; margin: 5px 0;">Connection to SarapBot lost... Check your internet!</div>`;
+      }
+    }
   </script>
 </body>
 </html>
