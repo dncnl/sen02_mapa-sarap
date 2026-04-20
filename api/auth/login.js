@@ -7,9 +7,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, email, password } = req.body;
+  const { email, password } = req.body; // 'email' serves as the identifier (Email or Username)
 
-  if ((!email && !name) || !password) {
+  if (!email || !password) {
     return res.status(400).json({ error: 'Email/Username and password are required' });
   }
 
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     const { rows } = await sql`
       SELECT id, username, email, password_hash, role 
       FROM users 
-      WHERE email = ${email} OR username = ${name}
+      WHERE email = ${email} OR username = ${email}
       LIMIT 1
     `;
 
