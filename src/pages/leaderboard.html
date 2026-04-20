@@ -65,13 +65,19 @@
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
-    function renderLeaderboard() {
+    async function renderLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center;">Loading rankings...</td></tr>';
+
       // Ensure we have access to restaurants and top-rated logic from the data layer
+      if (restaurants.length === 0) {
+        await initializeData();
+      }
+
       const topRated = typeof getTopRatedRestaurants === 'function' 
         ? getTopRatedRestaurants() 
         : [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, 10);
 
-      const tbody = document.getElementById('leaderboard-body');
       const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23e0e0e0' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23999'%3E🍽️%3C/text%3E%3C/svg%3E";
 
       tbody.innerHTML = topRated.map((restaurant, index) => {

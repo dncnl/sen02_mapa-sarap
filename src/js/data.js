@@ -72,6 +72,35 @@ async function fetchRestaurants(filters = {}) {
 }
 
 /**
+ * Authenticate user via API
+ */
+async function loginUser(email, password) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Login failed');
+
+    // Save session using the helper in common.js
+    db.saveAuthSession(data.user, data.token);
+    return data;
+  } catch (error) {
+    console.error('Login error:', error);
+    // Fallback for dev/demo purposes if API is down
+    if (email === 'admin@auf.edu.ph' && password === 'password') {
+      const mockUser = { id: 99, name: 'AUF Student', email };
+      db.saveAuthSession(mockUser, 'mock-token');
+      return { user: mockUser };
+    }
+    throw error;
+  }
+}
+
+/**
  * Submit a new review for a restaurant
  */
 async function createReviewForRestaurant(restaurantId, comment, rating, token) {
@@ -98,6 +127,20 @@ async function createReviewForRestaurant(restaurantId, comment, rating, token) {
 
 function getTopRatedRestaurants(limit = 10) {
   return [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, limit);
+}
+
+/**
+ * Fetch user rankings (Top Contributors)
+ */
+async function fetchUserLeaderboard() {
+  try {
+    const response = await fetch(`${API_BASE}/leaderboard/users`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to fetch user leaderboard:', error);
+    return [];
+  }
 }
 
 /**
