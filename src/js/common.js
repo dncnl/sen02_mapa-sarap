@@ -343,14 +343,35 @@ async function renderRestaurantGrid(filteredRestaurants, containerId = 'restaura
 // FILTERING & SEARCH
 // ============================================
 
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+
+  const deltaLat = toRadians(lat2 - lat1);
+  const deltaLng = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
+}
+
+function getRestaurantFilterContext() {
+  if (typeof window.getRestaurantFilterContext === 'function') {
+    return window.getRestaurantFilterContext();
+  }
+
+  return {};
+}
+
 function filterRestaurants() {
   const searchQuery = document.getElementById('search-input')?.value || '';
   const selectedCuisine = document.getElementById('cuisine-filter')?.value || 'All';
   const selectedPrice = document.getElementById('price-filter')?.value || 'All';
   const selectedRating = parseFloat(document.getElementById('rating-filter')?.value || 0);
   const isOpenOnly = document.getElementById('open-only-filter')?.checked || false;
-  const distanceRadius = parseFloat(document.getElementById('distance-slider')?.value || 5);
-  const locationRef = document.getElementById('location-reference')?.value || 'auf';
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -361,16 +382,13 @@ function filterRestaurants() {
     const matchesPrice = selectedPrice === 'All' || restaurant.priceRange === selectedPrice;
     const matchesRating = restaurant.rating >= selectedRating;
     const matchesOpenNow = !isOpenOnly || restaurant.status === 'Open';
+    const matchesBasis = selectedBasis === 'all' || !activeAnchor || (
+      Number.isFinite(Number(restaurant.lat)) &&
+      Number.isFinite(Number(restaurant.lng)) &&
+      getDistanceKm(activeAnchor.lat, activeAnchor.lng, restaurant.lat, restaurant.lng) <= radiusKm
+    );
 
-    let matchesDistance = false;
-    if (locationRef === 'me' && userCoords) {
-      matchesDistance = calculateDistance(userCoords.lat, userCoords.lng, restaurant.lat, restaurant.lng) <= distanceRadius;
-    } else {
-      // Default to AUF basis
-      matchesDistance = calculateDistance(AUF_COORDS.lat, AUF_COORDS.lng, restaurant.lat, restaurant.lng) <= distanceRadius;
-    }
-
-    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow && matchesDistance;
+    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow;
   });
 
   return filtered;
@@ -410,6 +428,8 @@ function setupFilters() {
       updateLiveLocationMarker();
     }
   };
+
+  window.refreshRestaurantResults = updateResults;
 
   if (searchInput) {
     searchInput.addEventListener('input', updateResults);
