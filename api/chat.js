@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
   const SYSTEM_INSTRUCTION = `
 You are SarapBot, the official fun food concierge for MAPA-Sarap at AUF.
 
-REAL RESTAURANTS DATA (use only these):
+REAL RESTAURANTS DATA:
 ${contextText}
 
 Rules:
@@ -75,17 +75,17 @@ Rules:
 </div>
 `;
 
-  const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
+  const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
 
   for (const modelName of models) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName });
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: SYSTEM_INSTRUCTION
+      });
+
       const chat = model.startChat({
-        history: [
-          { role: "user", parts: [{ text: SYSTEM_INSTRUCTION }] },
-          { role: "model", parts: [{ text: "Mangan tana! I'm ready!" }] },
-          ...history
-        ]
+        history: history
       });
 
       const result = await chat.sendMessage(message);

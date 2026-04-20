@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
     const { name, email, password } = req.body || {};
 
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'All fields (name, email, password) are required' });
+      return res.status(400).json({ error: 'Full Name, Email, and Password are required' });
     }
 
     // Check if user already exists
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
 
     return res.status(201).json({
       token,
-      user: { id: newUser.id, name: newUser.username, email: newUser.email }
+      user: { id: newUser.id, name: newUser.username, username: newUser.username, email: newUser.email }
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

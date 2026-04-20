@@ -9,7 +9,16 @@ module.exports = async (req, res) => {
 
   try {
     // Destructure inside try-catch to handle potential null req.body
-    const { email, password } = req.body || {};
+    let body = req.body;
+    
+    // Manual parsing for environments where req.body might not be automatically parsed
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) { body = {}; }
+    }
+    
+    let { email, password } = body || {};
+    // Support legacy 'name' field if email is missing from payload
+    if (!email && req.body.name) email = req.body.name;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -43,7 +52,7 @@ module.exports = async (req, res) => {
       token,
       user: { 
         id: user.id, 
-        name: user.username, // username column holds Full Name
+        name: user.username, // username column stores the Full Name
         username: user.username,
         email: user.email, 
         role: user.role 

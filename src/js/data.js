@@ -52,7 +52,7 @@ async function fetchRestaurants(filters = {}) {
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     
     const data = await response.json();
-    
+
     // If the API returns successfully but the database is empty (common in new production deploys),
     // we throw an error to trigger the FALLBACK_DATA logic so the UI isn't empty.
     if (!Array.isArray(data) || data.length === 0) throw new Error('No data found in API');
@@ -80,7 +80,7 @@ async function loginUser(email, password) {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password })
     });
 
     const data = await response.json().catch(() => ({}));
@@ -112,7 +112,7 @@ async function signupUser(name, email, password) {
     const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password })
     });
 
     const data = await response.json().catch(() => ({}));
