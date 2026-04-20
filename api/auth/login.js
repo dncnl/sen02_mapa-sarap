@@ -47,7 +47,12 @@ module.exports = async (req, res) => {
         role: user.role 
       }
     });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
+} catch (error) {
+  console.error("FULL ERROR LOG:", error); // This goes to Vercel Logs
+  return res.status(500).json({ 
+    error: "Server Crash", 
+    details: error.message, 
+    stack: error.stack 
+  });
+}
 };
