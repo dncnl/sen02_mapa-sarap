@@ -41,6 +41,7 @@ async function getUserLocation() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        window.liveLocationCoordinates = userCoords;
         resolve(userCoords);
       },
       (err) => reject(err),
@@ -372,6 +373,12 @@ function filterRestaurants() {
   const selectedPrice = document.getElementById('price-filter')?.value || 'All';
   const selectedRating = parseFloat(document.getElementById('rating-filter')?.value || 0);
   const isOpenOnly = document.getElementById('open-only-filter')?.checked || false;
+  const locationReference = document.getElementById('location-reference')?.value || 'auf';
+  const radiusKm = parseFloat(document.getElementById('distance-slider')?.value || window.liveLocationRadiusKm || 5);
+
+  const basisContext = getRestaurantFilterContext();
+  const liveLocation = userCoords || basisContext.liveLocation || window.liveLocationCoordinates || null;
+  const anchor = locationReference === 'me' ? liveLocation : AUF_COORDS;
 
   const filtered = restaurants.filter(restaurant => {
     const matchesSearch = searchQuery === '' ||
@@ -382,13 +389,12 @@ function filterRestaurants() {
     const matchesPrice = selectedPrice === 'All' || restaurant.priceRange === selectedPrice;
     const matchesRating = restaurant.rating >= selectedRating;
     const matchesOpenNow = !isOpenOnly || restaurant.status === 'Open';
-    const matchesBasis = selectedBasis === 'all' || !activeAnchor || (
-      Number.isFinite(Number(restaurant.lat)) &&
-      Number.isFinite(Number(restaurant.lng)) &&
-      getDistanceKm(activeAnchor.lat, activeAnchor.lng, restaurant.lat, restaurant.lng) <= radiusKm
+    const hasCoordinates = Number.isFinite(Number(restaurant.lat)) && Number.isFinite(Number(restaurant.lng));
+    const matchesDistance = !anchor || !hasCoordinates || (
+      getDistanceKm(anchor.lat, anchor.lng, restaurant.lat, restaurant.lng) <= radiusKm
     );
 
-    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow;
+    return matchesSearch && matchesCuisine && matchesPrice && matchesRating && matchesOpenNow && matchesDistance;
   });
 
   return filtered;
@@ -407,6 +413,9 @@ function setupFilters() {
     if (locationRef && locationRef.value === 'me' && !userCoords) {
       try {
         await getUserLocation();
+        if (typeof updateLiveLocationMarker === 'function') {
+          updateLiveLocationMarker();
+        }
       } catch (err) {
         alert("Please enable location services to use the distance filter.");
         locationRef.value = 'auf';
