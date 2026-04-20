@@ -79,9 +79,13 @@
           <div style="display: flex; flex-direction: column; gap: 0.5rem;">
             <label class="filter-label">Basis</label>
             <select id="location-reference" style="min-width: 140px;">
-              <option value="auf">Angeles University Foundation</option>
-              <option value="me">Live Location</option>
+              <option value="auf-main">Angeles University Foundation Main Building</option>
+              <option value="auf-ps">Angeles University Foundation PS Building</option>
+              <option value="auf-eya">Angeles University Foundation EYA Building</option>
+              <option value="auf-scc">Angeles University Foundation SCC</option>
+              <option value="live-location">Live Location</option>
             </select>
+            <span id="active-basis-indicator" class="active-basis-indicator" aria-live="polite">Active: Angeles University Foundation Main Building</span>
           </div>
 
           <!-- Distance Slider -->
@@ -227,18 +231,57 @@
     });
 
     function getSelectedBasis() {
-      const locationReference = document.getElementById('location-reference')?.value || 'auf';
-      return locationReference === 'me' ? 'live-location' : 'auf-main';
+      const locationReference = document.getElementById('location-reference')?.value || 'auf-main';
+      if (locationReference === 'me') return 'live-location';
+      if (locationReference === 'auf') return 'auf-main';
+      return locationReference;
+    }
+
+    function populateBasisDropdown() {
+      const locationReference = document.getElementById('location-reference');
+      if (!locationReference) return;
+
+      const previousValue = getSelectedBasis();
+      const optionsHtml = [
+        ...basisLocations.map((location) => `<option value="${location.id}">${location.name}</option>`),
+        '<option value="live-location">Live Location</option>',
+      ].join('');
+
+      locationReference.innerHTML = optionsHtml;
+
+      const hasPrevious = basisLocations.some((location) => location.id === previousValue) || previousValue === 'live-location';
+      locationReference.value = hasPrevious ? previousValue : 'auf-main';
+      updateActiveBasisIndicator();
+    }
+
+    function getSelectedBasisName() {
+      const selectedBasisId = getSelectedBasis();
+      if (selectedBasisId === 'live-location') {
+        return 'Live Location';
+      }
+
+      const selectedBasis = getBasisLocationById(selectedBasisId);
+      return selectedBasis ? selectedBasis.name : 'Angeles University Foundation Main Building';
+    }
+
+    function updateActiveBasisIndicator() {
+      const activeBasisIndicator = document.getElementById('active-basis-indicator');
+      if (!activeBasisIndicator) return;
+
+      activeBasisIndicator.textContent = `Active: ${getSelectedBasisName()}`;
     }
 
     function syncLiveLocationMarkerState() {
       if (!map || !liveLocationMarker) return;
 
       const isLiveBasis = getSelectedBasis() === 'live-location';
-      liveLocationMarker.setIcon(isLiveBasis ? greenMarkerIcon : defaultMarkerIcon);
-
-      if (!map.hasLayer(liveLocationMarker)) {
-        liveLocationMarker.addTo(map);
+      if (isLiveBasis) {
+        liveLocationMarker.setIcon(greenMarkerIcon);
+        if (!map.hasLayer(liveLocationMarker)) {
+          liveLocationMarker.addTo(map);
+        }
+      } else if (map.hasLayer(liveLocationMarker)) {
+        map.removeLayer(liveLocationMarker);
       }
     }
 
@@ -313,17 +356,25 @@
       restaurantMarkers = [];
       basisMarkers = [];
 
-      basisLocations.forEach(location => {
+      const selectedBasisId = getSelectedBasis();
+      const selectedBasis = selectedBasisId === 'live-location'
+        ? null
+        : getBasisLocationById(selectedBasisId);
+      updateActiveBasisIndicator();
+
+      if (selectedBasis) {
         const popupHtml = `
-          <b>${location.name}</b><br>
+          <b>${selectedBasis.name}</b><br>
           <span style="font-size: 0.875rem; color: #666;">
-            Basis campus indicator
+            Basis campus indicator<br>
+            <span style="display: inline-block; margin-top: 0.2rem; color: #0f766e; font-weight: 600;">
+              Active basis
+            </span>
           </span>
         `;
-        const markerIcon = defaultMarkerIcon;
-        const marker = createMarker(location.lat, location.lng, popupHtml, markerIcon);
+        const marker = createMarker(selectedBasis.lat, selectedBasis.lng, popupHtml, greenMarkerIcon);
         basisMarkers.push(marker);
-      });
+      }
 
       syncLiveLocationMarkerState();
 
@@ -349,7 +400,11 @@
       });
 
       // Auto-fit bounds if there are markers
-      const fitMarkers = [...basisMarkers, ...restaurantMarkers, ...(liveLocationMarker ? [liveLocationMarker] : [])];
+      const fitMarkers = [
+        ...basisMarkers,
+        ...restaurantMarkers,
+        ...(liveLocationMarker && map.hasLayer(liveLocationMarker) ? [liveLocationMarker] : []),
+      ];
       if (fitMarkers.length > 0) {
         const group = new L.featureGroup(fitMarkers);
         map.fitBounds(group.getBounds().pad(0.1));
@@ -371,7 +426,7 @@
           const popupHtml = `
             <b>Your Live Location</b><br>
             <span style="font-size: 0.875rem; color: #666;">
-              Current position
+              Current position${isLiveBasis ? '<br><span style="display: inline-block; margin-top: 0.2rem; color: #0f766e; font-weight: 600;">Active basis</span>' : ''}
             </span>
           `;
 
@@ -405,6 +460,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeData();
       await renderStats();
+      populateBasisDropdown();
       setupFilters();
     });
   </script>
