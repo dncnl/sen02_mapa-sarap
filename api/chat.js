@@ -58,7 +58,6 @@ Rules:
 
 <div class="chat-actions">
   <a href="src/pages/restaurant-detail.html?id=ID" class="chat-btn">View Full Details</a>
-  <a href="https://www.google.com/maps/dir/?api=1&destination=LAT,LNG&travelmode=walking" target="_blank" class="chat-btn outline">Get Walking Directions</a>
 </div>
 `;
 

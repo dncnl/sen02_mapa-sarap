@@ -80,16 +80,10 @@ async function loginUser(email, password) {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: email, password })
+      body: JSON.stringify({ email, password })
     });
 
-    const responseText = await response.text();
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      data = null;
-    }
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data?.error || data?.details || `Server Error ${response.status}`);
@@ -121,7 +115,7 @@ async function signupUser(name, email, password) {
       body: JSON.stringify({ name, email, password })
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Signup failed');
 
     // Save session using the helper in common.js
