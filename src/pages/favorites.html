@@ -52,7 +52,7 @@
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
-    function renderFavorites() {
+    async function renderFavorites() {
       const user = storage.getUser();
       const favoritesContent = document.getElementById('favorites-content');
 
@@ -98,16 +98,22 @@
         return;
       }
 
+      const cards = await Promise.all(favoriteRestaurants.map(restaurant => createRestaurantCard(restaurant)));
+
       const html = `
         <div class="grid-restaurants">
-          ${favoriteRestaurants.map(restaurant => createRestaurantCard(restaurant)).join('')}
+          ${cards.join('')}
         </div>
       `;
 
       favoritesContent.innerHTML = html;
     }
 
-    document.addEventListener('DOMContentLoaded', renderFavorites);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeData();
+      await renderFavorites();
+      setupHeader();
+    });
   </script>
 </body>
 </html>

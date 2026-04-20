@@ -2,7 +2,7 @@
  * API Endpoint: /api/reviews
  * GET    -> returns reviews for a specific restaurant
  * POST   -> creates a review for an authenticated user
- * PATCH  -> marks a review as helpful for an authenticated user
+ * PATCH  -> toggles helpful vote for an authenticated user
  */
 
 const { Client } = require('pg');
@@ -48,6 +48,8 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       const { placeId } = req.query;
+      const authUser = getAuthUser(req);
+      const viewerUserId = authUser?.userId ? parseInt(authUser.userId, 10) : null;
 
       if (!placeId) {
         return res.status(400).json({ error: 'placeId query parameter required' });
@@ -63,13 +65,19 @@ module.exports = async (req, res) => {
           r.review_text as comment,
           r.helpful_count,
           r.created_at as date,
-          ra.rating
+          ra.rating,
+          EXISTS (
+            SELECT 1
+            FROM review_helpful_votes rv
+            WHERE rv.review_id = r.id
+              AND rv.user_id = $2
+          ) AS has_helpful_vote
         FROM reviews r
         JOIN users u ON r.user_id = u.id
         LEFT JOIN ratings ra ON r.user_id = ra.user_id AND r.place_id = ra.place_id
         WHERE r.place_id = $1
         ORDER BY r.created_at DESC
-      `, [placeId]);
+      `, [placeId, viewerUserId]);
 
       const reviews = result.rows.map(row => ({
         id: row.id,
@@ -79,6 +87,7 @@ module.exports = async (req, res) => {
         comment: row.comment,
         date: row.date,
         helpfulCount: row.helpful_count,
+        hasHelpfulVote: !!row.has_helpful_vote,
       }));
 
       return res.status(200).json(reviews);
@@ -98,7 +107,7 @@ module.exports = async (req, res) => {
       }
 
       const reviewResult = await client.query(
-        'SELECT id, helpful_count FROM reviews WHERE id = $1 LIMIT 1',
+        'SELECT id FROM reviews WHERE id = $1 LIMIT 1',
         [reviewId]
       );
 
@@ -106,43 +115,61 @@ module.exports = async (req, res) => {
         return res.status(404).json({ error: 'Review not found' });
       }
 
-      const currentHelpfulCount = parseInt(reviewResult.rows[0].helpful_count, 10) || 0;
-
       await client.query('BEGIN');
 
       try {
-        await client.query(
-          `INSERT INTO review_helpful_votes (review_id, user_id)
-           VALUES ($1, $2)`,
+        const existingVote = await client.query(
+          `SELECT id
+           FROM review_helpful_votes
+           WHERE review_id = $1 AND user_id = $2
+           LIMIT 1`,
           [reviewId, authUser.userId]
         );
 
-        const updatedResult = await client.query(
-          `UPDATE reviews
-           SET helpful_count = helpful_count + 1
-           WHERE id = $1
-           RETURNING helpful_count`,
-          [reviewId]
-        );
+        let updatedResult;
+        let voted;
+
+        if (existingVote.rows.length > 0) {
+          await client.query(
+            `DELETE FROM review_helpful_votes
+             WHERE review_id = $1 AND user_id = $2`,
+            [reviewId, authUser.userId]
+          );
+
+          updatedResult = await client.query(
+            `UPDATE reviews
+             SET helpful_count = GREATEST(helpful_count - 1, 0)
+             WHERE id = $1
+             RETURNING helpful_count`,
+            [reviewId]
+          );
+          voted = false;
+        } else {
+          await client.query(
+            `INSERT INTO review_helpful_votes (review_id, user_id)
+             VALUES ($1, $2)`,
+            [reviewId, authUser.userId]
+          );
+
+          updatedResult = await client.query(
+            `UPDATE reviews
+             SET helpful_count = helpful_count + 1
+             WHERE id = $1
+             RETURNING helpful_count`,
+            [reviewId]
+          );
+          voted = true;
+        }
 
         await client.query('COMMIT');
 
         return res.status(200).json({
           reviewId,
-          helpfulCount: parseInt(updatedResult.rows[0].helpful_count, 10) || currentHelpfulCount + 1,
-          alreadyMarked: false,
+          helpfulCount: parseInt(updatedResult.rows[0].helpful_count, 10) || 0,
+          voted,
         });
       } catch (error) {
         await client.query('ROLLBACK');
-
-        if (error.code === '23505') {
-          return res.status(200).json({
-            reviewId,
-            helpfulCount: currentHelpfulCount,
-            alreadyMarked: true,
-          });
-        }
-
         throw error;
       }
     }
