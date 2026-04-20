@@ -67,31 +67,37 @@
           <div class="dish-summary-title">Choose a dish to see ratings and reviews.</div>
         </div>
 
-        <form class="review-form" id="dish-review-form" onsubmit="submitDishReview(event)">
-          <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
+        <div style="margin-top: 1.5rem;">
+          <button id="toggle-dish-form" class="btn btn-outline btn-small" onclick="document.getElementById('dish-review-form').classList.toggle('active'); this.textContent = document.getElementById('dish-review-form').classList.contains('active') ? '✕ Cancel' : '+ Write a Dish Review'">+ Write a Dish Review</button>
+          <form class="review-form" id="dish-review-form" onsubmit="submitDishReview(event)" style="display: none; margin-top: 1rem;">
+            <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
 
-          <div class="form-group">
-            <label>Dish Rating</label>
-            <div id="dish-rating-selector"></div>
-          </div>
+            <div class="form-group">
+              <label>Dish Rating</label>
+              <div id="dish-rating-selector"></div>
+            </div>
 
-          <div class="form-group">
-            <label for="dish-review-comment">Your Dish Review</label>
-            <textarea id="dish-review-comment" placeholder="Share your thoughts about this specific dish..." required></textarea>
-          </div>
+            <div class="form-group">
+              <label for="dish-review-comment">Your Dish Review</label>
+              <textarea id="dish-review-comment" placeholder="Share your thoughts about this specific dish..." required></textarea>
+            </div>
 
-          <button type="submit" class="btn btn-primary">Submit Dish Review</button>
-        </form>
+            <button type="submit" class="btn btn-primary">Submit Dish Review</button>
+          </form>
+        </div>
 
         <div class="review-list" id="dish-reviews-list"></div>
       </section>
 
       <!-- Reviews Section -->
       <section class="reviews-section">
-        <h3>Reviews</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0;">Reviews</h3>
+          <button id="toggle-review-form" class="btn btn-primary btn-small" onclick="document.getElementById('review-form').classList.toggle('active'); this.textContent = document.getElementById('review-form').classList.contains('active') ? '✕ Cancel' : 'Write a Review'">Write a Review</button>
+        </div>
 
         <!-- Review Form -->
-        <form class="review-form" id="review-form" onsubmit="submitReview(event)">
+        <form class="review-form" id="review-form" onsubmit="submitReview(event)" style="display: none;">
           <h4 style="margin-bottom: 1rem; font-weight: 600;">Add a Review</h4>
           
           <div class="form-group">
@@ -395,25 +401,31 @@
           </button>
         </div>
 
-        <div class="detail-meta">
+        <div class="detail-meta" style="background: var(--card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem;">
           <div class="detail-meta-item">
-            <span class="detail-meta-label">Cuisine</span>
-            <span class="detail-meta-value">${restaurant.cuisine}</span>
+            <span class="detail-meta-label" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted-foreground); margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;">Cuisine</span>
+            <span class="detail-meta-value" style="font-weight: 600; font-size: 1.1rem;">${restaurant.cuisine}</span>
           </div>
           <div class="detail-meta-item">
-            <span class="detail-meta-label">Price Range</span>
-            <span class="detail-meta-value">${restaurant.priceRange}</span>
+            <span class="detail-meta-label" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted-foreground); margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;">Price Range</span>
+            <span class="detail-meta-value" style="font-weight: 600; font-size: 1.1rem;">${restaurant.priceRange}</span>
           </div>
           <div class="detail-meta-item">
-            <span class="detail-meta-label">Status</span>
-            <span class="detail-meta-value" style="color: ${restaurant.status === 'Open' ? 'var(--success)' : 'var(--error)'}">${restaurant.status}</span>
-          </div>
-          <div class="detail-meta-item">
-            <span class="detail-meta-label">Distance</span>
-            <span class="detail-meta-value">
-              ${locationDisplay}
-              <a href="${directionUrl}" target="_blank" class="btn btn-small btn-outline" style="display: block; width: fit-content; margin-top: 0.5rem;">Walk Directions</a>
+            <span class="detail-meta-label" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted-foreground); margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;">Availability</span>
+            <span class="detail-meta-value" style="font-weight: 700; font-size: 1.1rem; color: ${restaurant.status === 'Open' ? '#22c55e' : '#ef4444'}; display: flex; align-items: center; gap: 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: currentColor;"></span>
+              ${restaurant.status}
             </span>
+          </div>
+          <div class="detail-meta-item" style="grid-column: span 1; min-width: 260px;">
+            <span class="detail-meta-label" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted-foreground); margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;">Proximity</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--muted); padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--border);">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-weight: 800; font-size: 1.1rem; color: var(--foreground);">${distText}</div>
+                <div style="font-size: 0.7rem; color: var(--muted-foreground); font-weight: 500;">from ${refLabel} • ${timeText}</div>
+              </div>
+              <a href="${directionUrl}" target="_blank" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.6rem 1rem; white-space: nowrap; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Get Directions</a>
+            </div>
           </div>
         </div>
       `;
