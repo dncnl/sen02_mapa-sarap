@@ -99,12 +99,12 @@ async function loginUser(email, password) {
 /**
  * Register a new user
  */
-async function signupUser(username, email, password) {
+async function signupUser(name, email, password) {
   try {
-    const response = await fetch(`${API_BASE}/auth/signup`, {
+    const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password })
+      body: JSON.stringify({ name, email, password })
     });
 
     const data = await response.json();

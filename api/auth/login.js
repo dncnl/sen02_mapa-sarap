@@ -7,10 +7,10 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body; // 'email' acts as the user identifier (Email or Name)
+  const { email, password } = req.body; 
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'Identifier and password are required' });
+    return res.status(400).json({ error: 'Email/Username and password are required' });
   }
 
   try {
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       token,
-      user: { id: user.id, name: user.username, email: user.email }
+      user: { id: user.id, name: user.username, email: user.email, role: user.role }
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

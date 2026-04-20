@@ -180,8 +180,8 @@ function setupHeader() {
   updateHeaderAuth();
 }
 
-async function updateHeaderAuth() {
-  const user = await db.getUser();
+function updateHeaderAuth() {
+  const user = db.getUser();
   const authContainer = document.querySelector('.header-actions');
 
   if (!authContainer) return;
@@ -202,8 +202,8 @@ async function updateHeaderAuth() {
   authContainer.innerHTML = html;
 }
 
-async function logout() {
-  await db.logout();
+function logout() {
+  db.logout();
   updateHeaderAuth();
   window.location.href = pagePaths.homePath;
 }

@@ -127,6 +127,18 @@
       document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
     }
 
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateForm(data) {
+      const errors = {};
+      if (!data.name && data.hasOwnProperty('name')) errors.name = 'Name is required';
+      if (!data.email) errors.email = 'Email is required';
+      else if (!validateEmail(data.email)) errors.email = 'Invalid email format';
+      return errors;
+    }
+
     function clearErrors(prefix = '') {
       const fields = prefix ? ['name', 'email', 'password'] : ['name', 'email', 'password', 'confirm'];
       fields.forEach(field => {
@@ -223,6 +235,10 @@
           if (errorEl) errorEl.textContent = error.message;
         });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setupHeader();
+    });
   </script>
 </body>
 </html>
