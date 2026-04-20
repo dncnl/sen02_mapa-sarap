@@ -194,6 +194,22 @@
       },
     ];
 
+    const LIVE_LOCATION_RADIUS_KM = 5;
+    window.liveLocationCoordinates = null;
+    window.liveLocationRadiusKm = LIVE_LOCATION_RADIUS_KM;
+
+    function getBasisLocationById(basisId) {
+      return basisLocations.find((location) => location.id === basisId) || null;
+    }
+
+    window.getRestaurantFilterContext = function getRestaurantFilterContext() {
+      return {
+        radiusKm: LIVE_LOCATION_RADIUS_KM,
+        liveLocation: window.liveLocationCoordinates,
+        getBasisLocationById,
+      };
+    };
+
     const greenMarkerIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
       iconRetinaUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -348,6 +364,7 @@
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          window.liveLocationCoordinates = { lat, lng };
           const popupHtml = `
             <b>Your Live Location</b><br>
             <span style="font-size: 0.875rem; color: #666;">
@@ -359,6 +376,11 @@
             liveLocationMarker.setLatLng([lat, lng]);
             liveLocationMarker.setPopupContent(popupHtml);
             syncLiveLocationMarkerState();
+
+            if (isLiveBasis && typeof window.refreshRestaurantResults === 'function') {
+              window.refreshRestaurantResults();
+            }
+
             return;
           }
 
@@ -366,6 +388,10 @@
           liveLocationMarker = L.marker([lat, lng], { icon: isLiveBasis ? greenMarkerIcon : defaultMarkerIcon })
             .bindPopup(popupHtml)
             .addTo(map);
+
+          if (isLiveBasis && typeof window.refreshRestaurantResults === 'function') {
+            window.refreshRestaurantResults();
+          }
         },
         () => {
           // Ignore permission or location errors silently.
