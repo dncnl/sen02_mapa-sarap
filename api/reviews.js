@@ -3,6 +3,7 @@
  * GET    -> returns reviews for a specific restaurant
  * POST   -> creates a review for an authenticated user
  * PATCH  -> toggles helpful vote for an authenticated user
+ * DELETE -> deletes a review for its authenticated owner only
  */
 
 const { Client } = require('pg');
@@ -34,7 +35,7 @@ async function parseJsonBody(req) {
 }
 
 module.exports = async (req, res) => {
-  if (!['GET', 'POST', 'PATCH'].includes(req.method)) {
+  if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(req.method)) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -81,6 +82,7 @@ module.exports = async (req, res) => {
 
       const reviews = result.rows.map(row => ({
         id: row.id,
+        userId: row.user_id,
         restaurantId: row.restaurant_id,
         userName: row.user_name,
         rating: row.rating || 5,
@@ -167,6 +169,63 @@ module.exports = async (req, res) => {
           reviewId,
           helpfulCount: parseInt(updatedResult.rows[0].helpful_count, 10) || 0,
           voted,
+        });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
+    }
+
+    if (req.method === 'DELETE') {
+      const authUser = getAuthUser(req);
+      if (!authUser?.userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const body = await parseJsonBody(req);
+      const reviewId = parseInt(body.reviewId, 10);
+
+      if (!Number.isInteger(reviewId) || reviewId <= 0) {
+        return res.status(400).json({ error: 'Valid reviewId is required' });
+      }
+
+      const reviewResult = await client.query(
+        `SELECT id, user_id, place_id
+         FROM reviews
+         WHERE id = $1
+         LIMIT 1`,
+        [reviewId]
+      );
+
+      if (reviewResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+
+      const review = reviewResult.rows[0];
+      if (parseInt(review.user_id, 10) !== parseInt(authUser.userId, 10)) {
+        return res.status(403).json({ error: 'You can only delete your own review' });
+      }
+
+      await client.query('BEGIN');
+
+      try {
+        await client.query(
+          `DELETE FROM reviews
+           WHERE id = $1 AND user_id = $2`,
+          [reviewId, authUser.userId]
+        );
+
+        await client.query(
+          `DELETE FROM ratings
+           WHERE user_id = $1 AND place_id = $2`,
+          [authUser.userId, review.place_id]
+        );
+
+        await client.query('COMMIT');
+
+        return res.status(200).json({
+          reviewId,
+          deleted: true,
         });
       } catch (error) {
         await client.query('ROLLBACK');

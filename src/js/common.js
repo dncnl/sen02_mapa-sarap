@@ -408,6 +408,8 @@ function validateForm(formData) {
 // ============================================
 
 function createReviewItem(review) {
+  const currentUser = db.getUser();
+  const isOwnReview = !!currentUser && Number(currentUser.id) === Number(review.userId);
   const hasHelpfulVote = !!review.hasHelpfulVote;
   const helpfulCount = Number(review.helpfulCount || 0);
 
@@ -421,12 +423,21 @@ function createReviewItem(review) {
       </div>
       <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
       <div class="review-text">${review.comment}</div>
-      <button type="button"
-              class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
-              data-review-id="${review.id}"
-              onclick="markReviewHelpful(${review.id}, event)">
-        👍 <span class="review-helpful-count">${helpfulCount}</span> found this helpful
-      </button>
+      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <button type="button"
+                class="review-helpful review-helpful-btn ${hasHelpfulVote ? 'voted' : ''}"
+                data-review-id="${review.id}"
+                onclick="markReviewHelpful(${review.id}, event)">
+          👍 <span class="review-helpful-count">${helpfulCount}</span> found this helpful
+        </button>
+        ${isOwnReview ? `
+          <button type="button"
+                  class="btn btn-small btn-outline"
+                  onclick="deleteOwnReview(${review.id}, event)">
+            Delete Review
+          </button>
+        ` : ''}
+      </div>
     </div>
   `;
 }
@@ -500,6 +511,41 @@ async function markReviewHelpful(reviewId, event) {
     alert(error.message || 'Failed to mark review as helpful');
   } finally {
     button.disabled = false;
+  }
+}
+
+async function deleteOwnReview(reviewId, event) {
+  event.preventDefault();
+
+  const user = db.getUser();
+  if (!user) {
+    alert('Please login to delete your review');
+    window.location.href = pagePaths.loginPath;
+    return;
+  }
+
+  const token = db.getToken();
+  if (!token) {
+    alert('Please login again to continue.');
+    window.location.href = pagePaths.loginPath;
+    return;
+  }
+
+  const shouldDelete = window.confirm('Delete your review? This cannot be undone.');
+  if (!shouldDelete) return;
+
+  try {
+    await deleteReviewById(reviewId, token);
+
+    const restaurantId = parseInt(getUrlParam('id'), 10);
+    if (Number.isInteger(restaurantId) && restaurantId > 0) {
+      const updatedReviews = await getReviewsByRestaurantId(restaurantId);
+      renderReviews(updatedReviews);
+    }
+
+    alert('Review deleted successfully.');
+  } catch (error) {
+    alert(error.message || 'Failed to delete review');
   }
 }
 
