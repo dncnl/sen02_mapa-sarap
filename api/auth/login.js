@@ -1,74 +1,50 @@
-const { Client } = require('pg');
+const { sql } = require('@vercel/postgres');
 const bcrypt = require('bcryptjs');
-const { signAuthToken } = require('../_lib/auth');
-
-function normalizeEmail(email) {
-  return String(email || '').trim().toLowerCase();
-}
+const jwt = require('jsonwebtoken');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, password } = typeof req.body === 'object' ? req.body : {};
-  const normalizedEmail = normalizeEmail(email);
+  const { email, password } = req.body;
 
-  if (!normalizedEmail || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  });
-
   try {
-    await client.connect();
+    // Query user by email or username
+    const { rows } = await sql`
+      SELECT id, username, email, password_hash, role 
+      FROM users 
+      WHERE email = ${email} OR username = ${email} 
+      LIMIT 1
+    `;
 
-    const result = await client.query(
-      'SELECT id, username, email, password_hash, role FROM users WHERE email = $1 LIMIT 1',
-      [normalizedEmail]
+    const user = rows[0];
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Verify password against password_hash in DB
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET || 'mapa_secret_key',
+      { expiresIn: '7d' }
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const user = result.rows[0];
-    let valid = false;
-
-    if (String(user.password_hash || '').startsWith('$2')) {
-      valid = await bcrypt.compare(String(password), user.password_hash);
-    } else {
-      valid = String(password) === String(user.password_hash);
-    }
-
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    const token = signAuthToken({
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    });
-
     return res.status(200).json({
-      user: {
-        id: user.id,
-        name: user.username,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
       token,
+      user: { id: user.id, name: user.username, email: user.email, role: user.role }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({ error: 'Failed to login' });
-  } finally {
-    await client.end();
+    return res.status(500).json({ error: error.message });
   }
 };

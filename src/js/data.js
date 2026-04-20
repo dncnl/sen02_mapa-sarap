@@ -2,11 +2,7 @@
 // MAPA-Sarap: Data Layer with API Integration
 // Fetches from backend API endpoints
 // ============================================
-
-// This automatically detects if you are on your PC or on Vercel
-const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-    ? 'https://mapa-sarap.vercel.app/api' 
-    : '/api'; 
+const API_BASE = '/api'; 
 
 // Fallback data for offline/development (same as seeded data)
 const FALLBACK_DATA = {
@@ -96,6 +92,29 @@ async function loginUser(email, password) {
       db.saveAuthSession(mockUser, 'mock-token');
       return { user: mockUser };
     }
+    throw error;
+  }
+}
+
+/**
+ * Register a new user
+ */
+async function signupUser(username, email, password) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Signup failed');
+
+    // Save session using the helper in common.js
+    db.saveAuthSession(data.user, data.token);
+    return data;
+  } catch (error) {
+    console.error('Signup error:', error);
     throw error;
   }
 }
