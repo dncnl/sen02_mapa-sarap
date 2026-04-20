@@ -158,7 +158,48 @@
   <script src="src/js/common.js"></script>
   <script>
     let map;
-    let markers = [];
+    let restaurantMarkers = [];
+    let basisMarkers = [];
+    let liveLocationMarker = null;
+
+    const basisLocations = [
+      {
+        name: 'Angeles University Foundation Main Building',
+        lat: 15.145032737088446,
+        lng: 120.59522415829747,
+      },
+      {
+        name: 'Angeles University Foundation PS Building',
+        lat: 15.144975204463575,
+        lng: 120.59575271874397,
+      },
+      {
+        name: 'Angeles University Foundation EYA Building',
+        lat: 15.144332122804718,
+        lng: 120.59599798989409,
+      },
+      {
+        name: 'Angeles University Foundation SCC',
+        lat: 15.144448630379697,
+        lng: 120.59553933217055,
+      },
+    ];
+
+    const greenMarkerIcon = L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+      iconRetinaUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    });
+
+    function createMarker(lat, lng, popupHtml, icon) {
+      return L.marker([lat, lng], { icon })
+        .bindPopup(popupHtml)
+        .addTo(map);
+    }
 
     async function renderStats() {
       const stats = await getStats();
@@ -209,6 +250,7 @@
           }).addTo(map);
         }
         updateMapMarkers();
+        updateLiveLocationMarker();
       } else {
         gridSection.style.display = 'block';
         mapSection.style.display = 'none';
@@ -219,8 +261,22 @@
 
     function updateMapMarkers() {
       if (!map) return;
-      markers.forEach(m => map.removeLayer(m));
-      markers = [];
+
+      restaurantMarkers.forEach(marker => map.removeLayer(marker));
+      basisMarkers.forEach(marker => map.removeLayer(marker));
+      restaurantMarkers = [];
+      basisMarkers = [];
+
+      basisLocations.forEach(location => {
+        const popupHtml = `
+          <b>${location.name}</b><br>
+          <span style="font-size: 0.875rem; color: #666;">
+            Basis campus indicator
+          </span>
+        `;
+        const marker = createMarker(location.lat, location.lng, popupHtml, greenMarkerIcon);
+        basisMarkers.push(marker);
+      });
 
       // Add user location marker if available for real-time reference
       if (userCoords) {
@@ -249,14 +305,46 @@
         const marker = L.marker([r.lat, r.lng])
           .bindPopup(markerHtml)
           .addTo(map);
-        markers.push(marker);
+        restaurantMarkers.push(marker);
       });
 
       // Auto-fit bounds if there are markers
-      if (markers.length > 0) {
-        const group = new L.featureGroup(markers);
+      const fitMarkers = [...basisMarkers, ...restaurantMarkers, ...(liveLocationMarker ? [liveLocationMarker] : [])];
+      if (fitMarkers.length > 0) {
+        const group = new L.featureGroup(fitMarkers);
         map.fitBounds(group.getBounds().pad(0.1));
       }
+    }
+
+    function updateLiveLocationMarker() {
+      if (!map || !navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const popupHtml = `
+            <b>Your Live Location</b><br>
+            <span style="font-size: 0.875rem; color: #666;">
+              Current position
+            </span>
+          `;
+
+          if (liveLocationMarker) {
+            liveLocationMarker.setLatLng([lat, lng]);
+            liveLocationMarker.setPopupContent(popupHtml);
+            return;
+          }
+
+          liveLocationMarker = L.marker([lat, lng], { icon: greenMarkerIcon })
+            .bindPopup(popupHtml)
+            .addTo(map);
+        },
+        () => {
+          // Ignore permission or location errors silently.
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

@@ -210,6 +210,26 @@ async function submitHelpfulVote(reviewId, token) {
   return payload;
 }
 
+async function deleteReviewById(reviewId, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      reviewId,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to delete review');
+  }
+
+  return payload;
+}
+
 // Get top-rated restaurants
 function getTopRatedRestaurants(limit = null) {
   const sorted = [...restaurants].sort((a, b) => {
@@ -244,6 +264,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getAmenitiesForRestaurant,
     createReviewForRestaurant,
     submitHelpfulVote,
+    deleteReviewById,
     getTopRatedRestaurants,
     filterRestaurantsByCriteria,
     fetchRestaurants,

@@ -925,12 +925,13 @@ input[type=range]:active::-webkit-slider-thumb {
   background: var(--muted);
   color: var(--muted-foreground);
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .review-helpful-btn:hover:not(:disabled) {
   border-color: var(--primary);
-  color: var(--primary);
+  color: var(--foreground);
 }
 
 .review-helpful-btn.voted,
@@ -943,6 +944,7 @@ input[type=range]:active::-webkit-slider-thumb {
 
 .review-helpful-count {
   font-weight: 600;
+  color: inherit;
 }
 
 /* ============================================
