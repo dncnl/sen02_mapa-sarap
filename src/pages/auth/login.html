@@ -34,13 +34,13 @@
         <form id="loginForm">
           <div class="form-group">
             <label for="login-email">Email Address</label>
-            <input type="email" id="login-email" name="email" placeholder="your@email.com" required>
+            <input type="email" id="login-email" placeholder="your@email.com" required>
             <div id="email-error" class="form-error"></div>
           </div>
 
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+            <input type="password" id="login-password" placeholder="••••••••" required>
             <div id="password-error" class="form-error"></div>
           </div>
 
@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <!-- REGISTER FORM -->
+      <!-- REGISTER FORM (untouched) -->
       <div id="register-form" style="display: none;">
         <form id="registerForm">
           <div class="form-group">
@@ -112,18 +112,14 @@
       document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
     }
 
-    function clearErrors(prefix = '') {
-      const fields = ['email', 'password', 'name', 'confirm'];
-      fields.forEach(field => {
-        const errorEl = document.getElementById(`${prefix}${field}-error`);
-        if (errorEl) errorEl.textContent = '';
-      });
+    function clearErrors() {
+      document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
     }
 
-    // FIXED LOGIN - now correctly sends email
+    // FIXED LOGIN - sends email correctly
     async function handleLogin(event) {
       event.preventDefault();
-      clearErrors('');
+      clearErrors();
 
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value.trim();
@@ -157,10 +153,10 @@
       }
     }
 
-    // REGISTER - kept exactly as it was (untouched)
+    // REGISTER - completely untouched
     async function handleRegister(event) {
       event.preventDefault();
-      clearErrors('reg-');
+      clearErrors();
 
       const name = document.getElementById('register-name').value.trim();
       const email = document.getElementById('register-email').value.trim();
@@ -192,7 +188,6 @@
       }
     }
 
-    // Initialize everything
     document.addEventListener('DOMContentLoaded', () => {
       const loginForm = document.getElementById('loginForm');
       if (loginForm) loginForm.addEventListener('submit', handleLogin);
