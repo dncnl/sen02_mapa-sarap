@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body>
-  <!-- HEADER -->
   <header>
     <div class="container">
       <div class="header-content">
@@ -15,15 +14,12 @@
           <div class="logo-icon">M</div>
           <span class="logo-text">MAPA-Sarap</span>
         </a>
-
         <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
-
         <nav>
           <a href="../../../index.html">Discover</a>
           <a href="../leaderboard.html">Leaderboard</a>
           <a href="../favorites.html">Favorites</a>
         </nav>
-
         <div class="header-actions"></div>
       </div>
     </div>
@@ -34,6 +30,7 @@
       <h2 class="form-title">Welcome Back</h2>
 
       <div id="login-form">
+<<<<<<< HEAD
         <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="form-group">
             <label for="login-email">Email Address</label>
@@ -41,15 +38,21 @@
             <div class="form-error" id="login-error"></div>
           </div>
 
+=======
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="login-name">Full Name</label>
+            <input type="text" id="login-name" required placeholder="Enter your full name">
+            <div class="form-error" id="name-error"></div>
+          </div>
+>>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" required placeholder="Enter your password (min. 6 characters)">
+            <input type="password" id="login-password" required placeholder="Enter your password">
             <div class="form-error" id="password-error"></div>
           </div>
-
           <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Login</button>
         </form>
-
         <div class="form-footer">
           <p>Don't have an account? <a href="#" onclick="switchToRegister(event)">Create one</a></p>
         </div>
@@ -62,28 +65,23 @@
             <input type="text" id="register-name" required placeholder="Enter your full name">
             <div class="form-error" id="reg-name-error"></div>
           </div>
-
           <div class="form-group">
             <label for="register-email">Email Address</label>
             <input type="email" id="register-email" required placeholder="Enter your email">
             <div class="form-error" id="reg-email-error"></div>
           </div>
-
           <div class="form-group">
             <label for="register-password">Password</label>
-            <input type="password" id="register-password" required placeholder="Create a password (min. 6 characters)">
+            <input type="password" id="register-password" required placeholder="Create a password">
             <div class="form-error" id="reg-password-error"></div>
           </div>
-
           <div class="form-group">
             <label for="register-confirm">Confirm Password</label>
             <input type="password" id="register-confirm" required placeholder="Confirm your password">
             <div class="form-error" id="reg-confirm-error"></div>
           </div>
-
           <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Create Account</button>
         </form>
-
         <div class="form-footer">
           <p>Already have an account? <a href="#" onclick="switchToLogin(event)">Login here</a></p>
         </div>
@@ -96,7 +94,6 @@
     </div>
   </main>
 
-  <!-- FOOTER -->
   <footer>
     <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
   </footer>
@@ -104,6 +101,7 @@
   <script src="../../js/data.js"></script>
   <script src="../../js/common.js"></script>
   <script>
+<<<<<<< HEAD
   const API_BASE = '/api';
 
   function switchToRegister(event) {
@@ -217,6 +215,99 @@
     if (registerForm) registerForm.addEventListener('submit', handleRegister);
     if (typeof setupHeader === 'function') setupHeader();
   });
+=======
+    function toggleForm(event) {
+      event.preventDefault();
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+      registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
+      document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+    }
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function clearErrors(prefix = '') {
+      const fields = ['name', 'email', 'password', 'confirm'];
+      fields.forEach(field => {
+        const errorEl = document.getElementById(`${prefix}${field}-error`);
+        if (errorEl) errorEl.textContent = '';
+      });
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      clearErrors('');
+
+      const name = document.getElementById('login-name').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, password })
+        });
+
+        const responseText = await response.text();
+        let payload;
+        try {
+          payload = JSON.parse(responseText);
+        } catch (e) {
+          payload = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(payload?.error || payload?.details || `Error ${response.status}: ${responseText.substring(0, 50)}`);
+        }
+
+        db.saveAuthSession(payload.user, payload.token);
+        alert(`Welcome back, ${payload.user.name}!`);
+        window.location.href = '../../../index.html';
+      } catch (error) {
+        const errEl = document.getElementById('name-error');
+        if (errEl) errEl.textContent = error.message;
+      }
+    }
+
+    async function handleRegister(event) {
+      event.preventDefault();
+      clearErrors('reg-');
+
+      const name = document.getElementById('register-name').value.trim();
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value.trim();
+      const confirm = document.getElementById('register-confirm').value.trim();
+
+      if (password !== confirm) {
+        document.getElementById('reg-confirm-error').textContent = 'Passwords do not match';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Registration failed');
+
+        db.saveAuthSession(payload.user, payload.token);
+        alert(`Account created! Welcome, ${payload.user.name || payload.user.username}!`);
+        window.location.href = '../../../index.html';
+      } catch (error) {
+        document.getElementById('reg-password-error').textContent = error.message;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof setupHeader === 'function') setupHeader();
+    });
+>>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
   </script>
 </body>
 </html>

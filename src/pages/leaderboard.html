@@ -40,15 +40,15 @@
         </p>
       </div>
 
-      <table class="leaderboard-table">
+      <table class="leaderboard-table" style="width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
         <thead>
-          <tr>
-            <th style="width: 80px;">Rank</th>
-            <th>Restaurant</th>
-            <th style="width: 120px;">Cuisine</th>
-            <th style="width: 100px;">Rating</th>
-            <th style="width: 120px;">Reviews</th>
-            <th style="width: 100px;">Price</th>
+          <tr style="background: var(--muted); text-align: left;">
+            <th style="padding: 1rem; width: 80px;">Rank</th>
+            <th style="padding: 1rem;">Restaurant</th>
+            <th style="padding: 1rem; width: 150px;">Cuisine</th>
+            <th style="padding: 1rem; width: 130px;">Rating</th>
+            <th style="padding: 1rem; width: 100px;">Reviews</th>
+            <th style="padding: 1rem; width: 100px;">Price</th>
           </tr>
         </thead>
         <tbody id="leaderboard-body">
@@ -65,46 +65,62 @@
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
-    function renderLeaderboard() {
-      const topRated = getTopRatedRestaurants();
+    async function renderLeaderboard() {
       const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center;">Loading rankings...</td></tr>';
 
-      if (!tbody) return;
-
-      if (!topRated.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" style="text-align: center; color: var(--muted-foreground); padding: 2rem;">
-              No restaurants found.
-            </td>
-          </tr>
-        `;
-        return;
+      // Ensure we have access to restaurants and top-rated logic from the data layer
+      if (restaurants.length === 0) {
+        await initializeData();
       }
+
+      const topRated = typeof getTopRatedRestaurants === 'function' 
+        ? getTopRatedRestaurants() 
+        : [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, 10);
+
+      const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23e0e0e0' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23999'%3E🍽️%3C/text%3E%3C/svg%3E";
 
       tbody.innerHTML = topRated.map((restaurant, index) => {
         const rankClass = index < 3 ? 'top-3' : '';
+        
+        // Calculate distance from AUF Main Hub for the standard leaderboard reference
+        const dist = calculateDistance(AUF_COORDS.lat, AUF_COORDS.lng, restaurant.lat, restaurant.lng);
+        const distText = dist < 0.1 ? 'Steps away' : `${dist.toFixed(1)} km`;
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lng}&travelmode=walking`;
+
         return `
-          <tr style="cursor: pointer;" onclick="window.location.href='restaurant-detail.html?id=${restaurant.id}'">
-            <td>
+          <tr style="cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;" onclick="window.location.href='restaurant-detail.html?id=${restaurant.id}'" onmouseover="this.style.background='rgba(0,0,0,0.02)'" onmouseout="this.style.background='transparent'">
+            <td style="padding: 1rem;">
               <span class="rank-badge ${rankClass}">${index + 1}</span>
             </td>
-            <td>
-              <div style="font-weight: 600; color: var(--foreground);">
-                ${restaurant.name}
-              </div>
-              <div style="font-size: 0.875rem; color: var(--muted-foreground);">
-                ${restaurant.address}
+            <td style="padding: 1rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <img src="${restaurant.imageUrl}" alt="${restaurant.name}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: var(--muted); flex-shrink: 0;" onerror="this.src='${fallbackImage}'">
+                <div style="overflow: hidden;">
+                  <div style="font-weight: 700; color: var(--foreground); font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                    ${restaurant.name}
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                    <span style="font-size: 0.75rem; color: var(--muted-foreground); font-weight: 600; display: flex; align-items: center; gap: 3px;">
+                      📍 ${distText}
+                    </span>
+                    <span style="color: var(--border);">|</span>
+                    <a href="${googleMapsUrl}" target="_blank" onclick="event.stopPropagation();" 
+                       style="font-size: 0.65rem; color: var(--primary); font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; background: rgba(var(--primary-rgb), 0.1); border-radius: 4px;">
+                       Walk →
+                    </a>
+                  </div>
+                </div>
               </div>
             </td>
-            <td>${restaurant.cuisine}</td>
-            <td>
-              <div style="color: var(--primary); font-weight: 600;">
-                ${renderStars(restaurant.rating)} <span class="rating-number">${restaurant.rating}</span>
+            <td style="padding: 1rem; font-size: 0.875rem; color: var(--muted-foreground); font-weight: 500;">${restaurant.cuisine}</td>
+            <td style="padding: 1rem;">
+              <div style="color: #f59e0b; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                ${renderStars(restaurant.rating)} <span style="color: var(--foreground);">${restaurant.rating}</span>
               </div>
             </td>
-            <td>${restaurant.reviewCount}</td>
-            <td>${restaurant.priceRange}</td>
+            <td style="padding: 1rem; color: var(--muted-foreground);">${restaurant.reviewCount}</td>
+            <td style="padding: 1rem; font-weight: 600;">${restaurant.priceRange}</td>
           </tr>
         `;
       }).join('');
@@ -113,6 +129,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeData();
       renderLeaderboard();
+      setupHeader();
     });
   </script>
 </body>

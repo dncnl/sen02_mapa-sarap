@@ -2,11 +2,7 @@
 // MAPA-Sarap: Data Layer with API Integration
 // Fetches from backend API endpoints
 // ============================================
-
-// This automatically detects if you are on your PC or on Vercel
-const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-    ? 'https://mapa-sarap.vercel.app/api' 
-    : '/api'; 
+const API_BASE = '/api'; 
 
 // Fallback data for offline/development (same as seeded data)
 const FALLBACK_DATA = {
@@ -80,15 +76,128 @@ async function fetchRestaurants(filters = {}) {
     if (filters.lng) params.append('lng', filters.lng);
     if (filters.radius) params.append('radius', filters.radius);
 
-    const response = await fetch(`${API_BASE}/restaurants?${params}`);
+    const url = `${API_BASE}/restaurants${params.toString() ? '?' + params : ''}`;
+    const response = await fetch(url);
+    
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     
-    restaurants = await response.json();
+    const data = await response.json();
+    // Ensure coordinates are mapped correctly if API uses database column names
+    restaurants = data.map(r => ({
+      ...r,
+      lat: r.lat || r.latitude,
+      lng: r.lng || r.longitude
+    }));
+
     return restaurants;
   } catch (error) {
     console.warn('Failed to fetch restaurants from API, using fallback:', error);
     restaurants = FALLBACK_DATA.restaurants;
     return restaurants;
+  }
+}
+
+/**
+ * Authenticate user via API
+ */
+async function loginUser(email, password) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: email, password })
+    });
+
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || data?.details || `Server Error ${response.status}`);
+    }
+
+    // Save session using the helper in common.js
+    db.saveAuthSession(data.user, data.token);
+    return data;
+  } catch (error) {
+    console.error('Login error:', error);
+    // Fallback for dev/demo purposes if API is down
+    if (email === 'admin@auf.edu.ph' && password === 'password') {
+      const mockUser = { id: 99, name: 'AUF Student', email };
+      db.saveAuthSession(mockUser, 'mock-token');
+      return { user: mockUser };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Register a new user
+ */
+async function signupUser(name, email, password) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Signup failed');
+
+    // Save session using the helper in common.js
+    db.saveAuthSession(data.user, data.token);
+    return data;
+  } catch (error) {
+    console.error('Signup error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Submit a new review for a restaurant
+ */
+async function createReviewForRestaurant(restaurantId, comment, rating, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      placeId: restaurantId,
+      rating,
+      comment,
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to submit review');
+  }
+
+  return payload;
+}
+
+function getTopRatedRestaurants(limit = 10) {
+  return [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, limit);
+}
+
+/**
+ * Fetch user rankings (Top Contributors)
+ */
+async function fetchUserLeaderboard() {
+  try {
+    const response = await fetch(`${API_BASE}/leaderboard/users`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to fetch user leaderboard:', error);
+    return [];
   }
 }
 
@@ -257,114 +366,6 @@ async function getAmenitiesForRestaurant(restaurantId) {
     return await response.json();
   } catch (error) {
     console.warn(`Failed to fetch amenities for restaurant ${restaurantId}:`, error);
-    const rest = getRestaurantById(restaurantId);
-    return rest ? rest.amenities : [];
+    return [];
   }
-}
-
-async function createReviewForRestaurant(restaurantId, comment, rating, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      placeId: restaurantId,
-      comment,
-      rating,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to create review');
-  }
-
-  return payload;
-}
-
-async function submitHelpfulVote(reviewId, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      reviewId,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to mark review as helpful');
-  }
-
-  return payload;
-}
-
-async function deleteReviewById(reviewId, token) {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      reviewId,
-    }),
-  });
-
-  const payload = await response.json();
-  if (!response.ok) {
-    throw new Error(payload.error || 'Failed to delete review');
-  }
-
-  return payload;
-}
-
-// Get top-rated restaurants
-function getTopRatedRestaurants(limit = null) {
-  const sorted = [...restaurants].sort((a, b) => {
-    if (b.rating !== a.rating) return b.rating - a.rating;
-    if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
-    return a.name.localeCompare(b.name);
-  });
-  return limit ? sorted.slice(0, limit) : sorted;
-}
-
-// Filter restaurants by criteria
-function filterRestaurantsByCriteria(criteria) {
-  return restaurants.filter(restaurant => {
-    if (criteria.cuisine && criteria.cuisine !== 'All' && restaurant.cuisine !== criteria.cuisine) return false;
-    if (criteria.priceRange && criteria.priceRange !== 'All' && restaurant.priceRange !== criteria.priceRange) return false;
-    if (criteria.minRating && restaurant.rating < criteria.minRating) return false;
-    if (criteria.openOnly && restaurant.status !== 'Open') return false;
-    return true;
-  });
-}
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    restaurants,
-    reviews,
-    getCuisines,
-    getStats,
-    getRestaurantById,
-    getReviewsByRestaurantId,
-    getDishesForRestaurant,
-    getDishMenuForRestaurant,
-    getDishReviewsByDishId,
-    createDishReviewForDish,
-    getAmenitiesForRestaurant,
-    createReviewForRestaurant,
-    submitHelpfulVote,
-    deleteReviewById,
-    getTopRatedRestaurants,
-    filterRestaurantsByCriteria,
-    fetchRestaurants,
-    initializeData
-  };
 }
