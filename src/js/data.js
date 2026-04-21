@@ -4,19 +4,112 @@
 // ============================================
 const API_BASE = '/api'; 
 
-// Fallback data for offline/development (same as seeded data)
+// ============================================
+// FALLBACK DATA 
+// ============================================
 const FALLBACK_DATA = {
   restaurants: [
-    { id: 1, name: 'Jollibee AUF', cuisine: 'Filipino Fast Food', description: 'Popular Filipino fast food chain known for fried chicken and spaghetti.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.144760266478606, lng: 120.59528740862909, priceRange: '$', phone: '+63 45 888 1234', website: 'https://www.jollibee.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=Jollibee+AUF', hours: '7:00 AM - 10:00 PM', status: 'Open', rating: 4.5, reviewCount: 2, distance: '< 0.1 km', amenities: ['Drive Thru', 'Delivery'], popularDishes: ['Chickenjoy', 'Jolly Spaghetti'] },
-    { id: 2, name: 'McDonald\'s Angeles Intersection', cuisine: 'American Fast Food', description: 'Global fast food chain offering burgers, fries, and breakfast meals.', address: 'MacArthur Hwy, Angeles City, Pampanga', lat: 15.142816498032756, lng: 120.59631362397157, priceRange: '$', phone: '+63 45 888 2234', website: 'https://www.mcdonalds.com.ph', imageUrl: 'https://via.placeholder.com/600x400?text=McDonalds+Angeles', hours: '24 Hours', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['24/7 Service', 'Drive Thru'], popularDishes: ['Big Mac', 'McChicken'] },
-    { id: 3, name: '24 Chicken Angeles', cuisine: 'Korean', description: 'Korean-style fried chicken with flavorful sauces.', address: 'Angeles City, Pampanga', lat: 15.142285685420413, lng: 120.59696079513589, priceRange: '$$', phone: '+63 45 888 3234', website: 'https://www.facebook.com/24chickenph', imageUrl: 'https://via.placeholder.com/600x400?text=24+Chicken+Angeles', hours: '10:00 AM - 11:00 PM', status: 'Open', rating: 5.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Takeout', 'Indoor Seating'], popularDishes: ['Yangnyeom Chicken', 'Snow Cheese Chicken'] },
-    { id: 4, name: 'Wall Street Wraps AUF', cuisine: 'Wraps and Rice Meals', description: 'Quick-service wraps and rice meals for students.', address: 'Near AUF, Angeles City, Pampanga', lat: 15.144080578526435, lng: 120.5957652922267, priceRange: '$', phone: '+63 45 888 4234', website: null, imageUrl: 'https://via.placeholder.com/600x400?text=Wall+Street+Wraps', hours: '8:00 AM - 9:00 PM', status: 'Open', rating: 4.0, reviewCount: 2, distance: '< 0.1 km', amenities: ['Student Meals', 'Takeout'], popularDishes: ['Chicken Wrap', 'Beef Rice Meal'] }
+    { 
+      id: 1, 
+      name: 'Jollibee AUF', 
+      cuisine: 'Filipino Fast Food', 
+      description: 'Popular Filipino fast food chain known for fried chicken and spaghetti.', 
+      address: 'MacArthur Hwy, Angeles City, Pampanga', 
+      lat: 15.144760, 
+      lng: 120.595287, 
+      priceRange: '$', 
+      imageUrl: 'https://via.placeholder.com/600x400?text=Jollibee+AUF', 
+      hours: '7:00 AM - 10:00 PM', 
+      status: 'Open', 
+      rating: 4.5, 
+      reviewCount: 12, 
+      popularDishes: ['Chickenjoy', 'Jolly Spaghetti'] 
+    },
+    { 
+      id: 2, 
+      name: "McDonald's Angeles Intersection", 
+      cuisine: 'American Fast Food', 
+      description: 'Global fast food chain offering burgers, fries, and breakfast meals.', 
+      address: 'MacArthur Hwy, Angeles City, Pampanga', 
+      lat: 15.142816, 
+      lng: 120.596313, 
+      priceRange: '$', 
+      imageUrl: 'https://via.placeholder.com/600x400?text=McDonalds', 
+      hours: '24 Hours', 
+      status: 'Open', 
+      rating: 4.2, 
+      reviewCount: 8, 
+      popularDishes: ['Big Mac', 'McChicken'] 
+    },
+    { 
+      id: 3, 
+      name: '24 Chicken Angeles', 
+      cuisine: 'Korean', 
+      description: 'Korean-style fried chicken with flavorful sauces.', 
+      address: 'Angeles City, Pampanga', 
+      lat: 15.142285, 
+      lng: 120.596960, 
+      priceRange: '$$', 
+      imageUrl: 'https://via.placeholder.com/600x400?text=24+Chicken', 
+      hours: '10:00 AM - 11:00 PM', 
+      status: 'Open', 
+      rating: 4.8, 
+      reviewCount: 15, 
+      popularDishes: ['Yangnyeom Chicken', 'Snow Cheese Chicken'] 
+    },
+    { 
+      id: 4, 
+      name: 'Wall Street Wraps AUF', 
+      cuisine: 'Wraps and Rice Meals', 
+      description: 'Quick-service wraps and rice meals for students.', 
+      address: 'Near AUF, Angeles City, Pampanga', 
+      lat: 15.144080, 
+      lng: 120.595765, 
+      priceRange: '$', 
+      imageUrl: 'https://via.placeholder.com/600x400?text=Wall+Street+Wraps', 
+      hours: '8:00 AM - 9:00 PM', 
+      status: 'Open', 
+      rating: 4.3, 
+      reviewCount: 7, 
+      popularDishes: ['Chicken Wrap', 'Beef Rice Meal'] 
+    },
+    // === More Real Places ===
+    { 
+      id: 8, name: '25 Seeds', cuisine: 'Restaurant', address: '2F, Dycaico Ancestral House, Angeles', 
+      lat: 15.136161, lng: 120.588835, priceRange: '$$', imageUrl: 'https://via.placeholder.com/600x400?text=25+Seeds', 
+      status: 'Open', rating: 4.6, reviewCount: 5, popularDishes: ['Salads', 'Healthy Bowls'] 
+    },
+    { 
+      id: 39, name: "Aling Lucing", cuisine: 'Restaurant', address: 'Glaciano Valdez St, Angeles', 
+      lat: 15.147528, lng: 120.589768, priceRange: '$', imageUrl: 'https://via.placeholder.com/600x400?text=Aling+Lucing', 
+      status: 'Open', rating: 4.4, reviewCount: 9, popularDishes: ['Sisig', 'Lechon'] 
+    },
+    { 
+      id: 52, name: "Andok's Angeles 1", cuisine: 'Fried Chicken', address: 'MacArthur Hwy, Angeles', 
+      lat: 15.143575, lng: 120.596462, priceRange: '$', imageUrl: 'https://via.placeholder.com/600x400?text=Andoks', 
+      status: 'Open', rating: 4.3, reviewCount: 11, popularDishes: ['Liempo', 'Fried Chicken'] 
+    },
+    { 
+      id: 67, name: "BRMC Bar and Grill", cuisine: 'Bar & Grill', address: 'Marisol Village, Angeles', 
+      lat: 15.150104, lng: 120.593705, priceRange: '$', imageUrl: 'https://via.placeholder.com/600x400?text=BRMC', 
+      status: 'Open', rating: 4.5, reviewCount: 6, popularDishes: ['Grilled Meats'] 
+    },
+    { 
+      id: 84, name: "Apag Bulaluhan", cuisine: 'Restaurant', address: 'Magalang Ave, Angeles', 
+      lat: 15.148860, lng: 120.594281, priceRange: '$', imageUrl: 'https://via.placeholder.com/600x400?text=Apag', 
+      status: 'Open', rating: 4.7, reviewCount: 8, popularDishes: ['Bulalo', 'Filipino Classics'] 
+    },
+    { 
+      id: 19, name: "Ate Malou's Catering", cuisine: 'Restaurant', address: 'Santo Entiero St, Angeles', 
+      lat: 15.141140, lng: 120.595262, priceRange: '$', imageUrl: 'https://via.placeholder.com/600x400?text=Ate+Malou', 
+      status: 'Open', rating: 4.4, reviewCount: 7, popularDishes: ['Catering Meals'] 
+    }
   ],
+
   reviews: [
     { id: 1, restaurantId: 1, userName: 'marias', rating: 5, comment: 'Chickenjoy is still the best comfort meal near campus.', date: '2026-04-14 08:30:00', helpfulCount: 12 },
     { id: 2, restaurantId: 2, userName: 'juancruz', rating: 4, comment: 'Fast service and reliable breakfast options before class.', date: '2026-04-12 03:00:00', helpfulCount: 9 },
     { id: 3, restaurantId: 3, userName: 'annalee', rating: 5, comment: 'Great sauces and crispy chicken. Best with friends.', date: '2026-04-15 10:00:00', helpfulCount: 14 },
-    { id: 4, restaurantId: 4, userName: 'carlor', rating: 4, comment: 'Affordable wraps and rice bowls for students on a budget.', date: '2026-04-13 05:40:00', helpfulCount: 6 }
   ]
 };
 
