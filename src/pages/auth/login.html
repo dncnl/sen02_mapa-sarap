@@ -29,195 +29,82 @@
     <div class="form-container">
       <h2 class="form-title">Welcome Back</h2>
 
+      <!-- LOGIN FORM -->
       <div id="login-form">
-<<<<<<< HEAD
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <form id="loginForm">
           <div class="form-group">
             <label for="login-email">Email Address</label>
             <input type="email" id="login-email" name="email" placeholder="your@email.com" required>
-            <div class="form-error" id="login-error"></div>
+            <div id="email-error" class="form-error"></div>
           </div>
 
-=======
-        <form onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label for="login-name">Full Name</label>
-            <input type="text" id="login-name" required placeholder="Enter your full name">
-            <div class="form-error" id="name-error"></div>
-          </div>
->>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" required placeholder="Enter your password">
-            <div class="form-error" id="password-error"></div>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+            <div id="password-error" class="form-error"></div>
           </div>
+
           <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Login</button>
         </form>
+
         <div class="form-footer">
-          <p>Don't have an account? <a href="#" onclick="switchToRegister(event)">Create one</a></p>
+          <p>Don't have an account? 
+            <a href="#" onclick="toggleForm(event)">Create one</a>
+          </p>
         </div>
       </div>
 
+      <!-- REGISTER FORM -->
       <div id="register-form" style="display: none;">
         <form id="registerForm">
           <div class="form-group">
             <label for="register-name">Full Name</label>
             <input type="text" id="register-name" required placeholder="Enter your full name">
-            <div class="form-error" id="reg-name-error"></div>
+            <div id="reg-name-error" class="form-error"></div>
           </div>
           <div class="form-group">
             <label for="register-email">Email Address</label>
             <input type="email" id="register-email" required placeholder="Enter your email">
-            <div class="form-error" id="reg-email-error"></div>
+            <div id="reg-email-error" class="form-error"></div>
           </div>
           <div class="form-group">
             <label for="register-password">Password</label>
             <input type="password" id="register-password" required placeholder="Create a password">
-            <div class="form-error" id="reg-password-error"></div>
+            <div id="reg-password-error" class="form-error"></div>
           </div>
           <div class="form-group">
             <label for="register-confirm">Confirm Password</label>
             <input type="password" id="register-confirm" required placeholder="Confirm your password">
-            <div class="form-error" id="reg-confirm-error"></div>
+            <div id="reg-confirm-error" class="form-error"></div>
           </div>
           <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Create Account</button>
         </form>
+
         <div class="form-footer">
-          <p>Already have an account? <a href="#" onclick="switchToLogin(event)">Login here</a></p>
+          <p>Already have an account? 
+            <a href="#" onclick="toggleForm(event)">Login here</a>
+          </p>
         </div>
       </div>
 
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">
         <p>Demo Credentials:</p>
-        <p>Email: demo@example.com | Password: demo123</p>
+        <p><strong>Email:</strong> demo@example.com | <strong>Password:</strong> demo123</p>
       </div>
     </div>
   </main>
 
   <footer>
-    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+    <p>&copy; 2026 MAPA-Sarap. All rights reserved.</p>
   </footer>
 
   <script src="../../js/data.js"></script>
   <script src="../../js/common.js"></script>
   <script>
-<<<<<<< HEAD
-  const API_BASE = '/api';
+    const API_BASE = '/api';
 
-  function switchToRegister(event) {
-    if (event) event.preventDefault();
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block';
-    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-  }
-
-  function switchToLogin(event) {
-    if (event) event.preventDefault();
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    loginForm.style.display = 'block';
-    registerForm.style.display = 'none';
-    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-  }
-
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  function clearErrors(prefix = '') {
-    const fields = ['name', 'email', 'password', 'confirm', 'login'];
-    fields.forEach(field => {
-      const errorEl = document.getElementById(`${prefix}${field}-error`);
-      if (errorEl) errorEl.textContent = '';
-    });
-  }
-
-  async function handleLogin(event) {
-    event.preventDefault();
-    clearErrors();
-
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-
-    if (!email || !password) {
-      const errEl = document.getElementById('login-error');
-      if (errEl) errEl.textContent = 'Email and password are required';
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const responseText = await response.text();
-      let payload;
-      try {
-        payload = JSON.parse(responseText);
-      } catch (e) {
-        payload = null;
-      }
-
-      if (!response.ok) {
-        throw new Error(payload?.error || payload?.details || `Error ${response.status}`);
-      }
-
-      db.saveAuthSession(payload.user, payload.token);
-      
-      alert(`Welcome back, ${payload.user.name || payload.user.username || 'User'}!`);
-      window.location.href = '../../../index.html';
-    } catch (error) {
-      console.error(error);
-      const errEl = document.getElementById('login-error');
-      if (errEl) errEl.textContent = error.message || 'Invalid credentials';
-    }
-  }
-
-  async function handleRegister(event) {
-    event.preventDefault();
-    clearErrors('reg-');
-
-    const name = document.getElementById('register-name').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value.trim();
-    const confirm = document.getElementById('register-confirm').value.trim();
-
-    if (password !== confirm) {
-      document.getElementById('reg-confirm-error').textContent = 'Passwords do not match';
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Registration failed');
-
-      db.saveAuthSession(payload.user, payload.token);
-      alert(`Account created successfully! Welcome, ${payload.user.name || payload.user.username}!`);
-      window.location.href = '../../../index.html';
-    } catch (error) {
-      const errorEl = document.getElementById('reg-password-error');
-      if (errorEl) errorEl.textContent = error.message || 'Registration failed';
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) registerForm.addEventListener('submit', handleRegister);
-    if (typeof setupHeader === 'function') setupHeader();
-  });
-=======
     function toggleForm(event) {
-      event.preventDefault();
+      if (event) event.preventDefault();
       const loginForm = document.getElementById('login-form');
       const registerForm = document.getElementById('register-form');
       loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
@@ -225,53 +112,52 @@
       document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
     }
 
-    function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
     function clearErrors(prefix = '') {
-      const fields = ['name', 'email', 'password', 'confirm'];
+      const fields = ['email', 'password', 'name', 'confirm'];
       fields.forEach(field => {
         const errorEl = document.getElementById(`${prefix}${field}-error`);
         if (errorEl) errorEl.textContent = '';
       });
     }
 
+    // FIXED LOGIN - now correctly sends email
     async function handleLogin(event) {
       event.preventDefault();
       clearErrors('');
 
-      const name = document.getElementById('login-name').value.trim();
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value.trim();
+
+      if (!email || !password) {
+        document.getElementById('email-error').textContent = 'Email and password are required';
+        return;
+      }
 
       try {
         const response = await fetch(`${API_BASE}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, password })
+          body: JSON.stringify({ email, password })
         });
 
         const responseText = await response.text();
         let payload;
-        try {
-          payload = JSON.parse(responseText);
-        } catch (e) {
-          payload = null;
-        }
+        try { payload = JSON.parse(responseText); } catch (e) { payload = null; }
 
         if (!response.ok) {
-          throw new Error(payload?.error || payload?.details || `Error ${response.status}: ${responseText.substring(0, 50)}`);
+          throw new Error(payload?.error || payload?.details || 'Invalid credentials');
         }
 
         db.saveAuthSession(payload.user, payload.token);
-        alert(`Welcome back, ${payload.user.name}!`);
+        alert(`Welcome back, ${payload.user.name || payload.user.username || 'User'}!`);
         window.location.href = '../../../index.html';
       } catch (error) {
-        const errEl = document.getElementById('name-error');
-        if (errEl) errEl.textContent = error.message;
+        console.error(error);
+        document.getElementById('email-error').textContent = error.message || 'Invalid credentials';
       }
     }
 
+    // REGISTER - kept exactly as it was (untouched)
     async function handleRegister(event) {
       event.preventDefault();
       clearErrors('reg-');
@@ -294,20 +180,28 @@
         });
 
         const payload = await response.json();
+
         if (!response.ok) throw new Error(payload.error || 'Registration failed');
 
         db.saveAuthSession(payload.user, payload.token);
         alert(`Account created! Welcome, ${payload.user.name || payload.user.username}!`);
         window.location.href = '../../../index.html';
       } catch (error) {
+        console.error(error);
         document.getElementById('reg-password-error').textContent = error.message;
       }
     }
 
+    // Initialize everything
     document.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) loginForm.addEventListener('submit', handleLogin);
+
+      const registerForm = document.getElementById('registerForm');
+      if (registerForm) registerForm.addEventListener('submit', handleRegister);
+
       if (typeof setupHeader === 'function') setupHeader();
     });
->>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
   </script>
 </body>
 </html>
