@@ -29,30 +29,37 @@
     <div class="form-container">
       <h2 class="form-title">Welcome Back</h2>
 
-      <!-- LOGIN FORM -->
       <div id="login-form">
-        <form id="loginForm">
+<<<<<<< HEAD
+        <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="form-group">
             <label for="login-email">Email Address</label>
             <input type="email" id="login-email" name="email" placeholder="your@email.com" required>
+            <div class="form-error" id="login-error"></div>
           </div>
-          
+
+=======
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="login-name">Full Name</label>
+            <input type="text" id="login-name" required placeholder="Enter your full name">
+            <div class="form-error" id="name-error"></div>
+          </div>
+>>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+            <input type="password" id="login-password" required placeholder="Enter your password">
+            <div class="form-error" id="password-error"></div>
           </div>
-      
-          <button type="submit" class="btn btn-primary w-full">Login</button>
+          <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Login</button>
         </form>
-        
-        <p class="text-center mt-4">
-          Don't have an account? 
-          <a href="#" onclick="switchToRegister()" class="text-primary">Create one</a>
-        </p>
+        <div class="form-footer">
+          <p>Don't have an account? <a href="#" onclick="switchToRegister(event)">Create one</a></p>
+        </div>
       </div>
 
       <div id="register-form" style="display: none;">
-        <form onsubmit="handleRegister(event)">
+        <form id="registerForm">
           <div class="form-group">
             <label for="register-name">Full Name</label>
             <input type="text" id="register-name" required placeholder="Enter your full name">
@@ -76,7 +83,7 @@
           <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Create Account</button>
         </form>
         <div class="form-footer">
-          <p>Already have an account? <a href="#" onclick="toggleForm(event)">Login here</a></p>
+          <p>Already have an account? <a href="#" onclick="switchToLogin(event)">Login here</a></p>
         </div>
       </div>
 
@@ -93,7 +100,122 @@
 
   <script src="../../js/data.js"></script>
   <script src="../../js/common.js"></script>
-  <!-- <script>
+  <script>
+<<<<<<< HEAD
+  const API_BASE = '/api';
+
+  function switchToRegister(event) {
+    if (event) event.preventDefault();
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+  }
+
+  function switchToLogin(event) {
+    if (event) event.preventDefault();
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+  }
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function clearErrors(prefix = '') {
+    const fields = ['name', 'email', 'password', 'confirm', 'login'];
+    fields.forEach(field => {
+      const errorEl = document.getElementById(`${prefix}${field}-error`);
+      if (errorEl) errorEl.textContent = '';
+    });
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    clearErrors();
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    if (!email || !password) {
+      const errEl = document.getElementById('login-error');
+      if (errEl) errEl.textContent = 'Email and password are required';
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const responseText = await response.text();
+      let payload;
+      try {
+        payload = JSON.parse(responseText);
+      } catch (e) {
+        payload = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(payload?.error || payload?.details || `Error ${response.status}`);
+      }
+
+      db.saveAuthSession(payload.user, payload.token);
+      
+      alert(`Welcome back, ${payload.user.name || payload.user.username || 'User'}!`);
+      window.location.href = '../../../index.html';
+    } catch (error) {
+      console.error(error);
+      const errEl = document.getElementById('login-error');
+      if (errEl) errEl.textContent = error.message || 'Invalid credentials';
+    }
+  }
+
+  async function handleRegister(event) {
+    event.preventDefault();
+    clearErrors('reg-');
+
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+    const confirm = document.getElementById('register-confirm').value.trim();
+
+    if (password !== confirm) {
+      document.getElementById('reg-confirm-error').textContent = 'Passwords do not match';
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Registration failed');
+
+      db.saveAuthSession(payload.user, payload.token);
+      alert(`Account created successfully! Welcome, ${payload.user.name || payload.user.username}!`);
+      window.location.href = '../../../index.html';
+    } catch (error) {
+      const errorEl = document.getElementById('reg-password-error');
+      if (errorEl) errorEl.textContent = error.message || 'Registration failed';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) registerForm.addEventListener('submit', handleRegister);
+    if (typeof setupHeader === 'function') setupHeader();
+  });
+=======
     function toggleForm(event) {
       event.preventDefault();
       const loginForm = document.getElementById('login-form');
@@ -185,123 +307,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof setupHeader === 'function') setupHeader();
     });
-  </script> -->
-  <script>
-  const API_BASE = '/api'; 
-
-  function toggleForm(event) {
-    event.preventDefault();
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
-    registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
-    document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-  }
-
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  function clearErrors(prefix = '') {
-    const fields = ['name', 'email', 'password', 'confirm'];
-    fields.forEach(field => {
-      const errorEl = document.getElementById(`${prefix}${field}-error`);
-      if (errorEl) errorEl.textContent = '';
-    });
-  }
-
-  // ================== UPDATED LOGIN ==================
-  async function handleLogin(event) {
-    event.preventDefault();
-    clearErrors('');
-
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-
-    if (!email || !password) {
-      const errEl = document.getElementById('name-error') || document.getElementById('email-error');
-      if (errEl) errEl.textContent = 'Email and password are required';
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const responseText = await response.text();
-      let payload;
-      try {
-        payload = JSON.parse(responseText);
-      } catch (e) {
-        payload = null;
-      }
-
-      if (!response.ok) {
-        throw new Error(payload?.error || payload?.details || `Error ${response.status}`);
-      }
-
-      // Save session using common.js helper
-      db.saveAuthSession(payload.user, payload.token);
-      
-      alert(`Welcome back, ${payload.user.name || payload.user.username || 'User'}!`);
-      window.location.href = '../../../index.html';   // adjust path if needed
-    } catch (error) {
-      console.error(error);
-      const errEl = document.getElementById('name-error') || document.getElementById('email-error');
-      if (errEl) errEl.textContent = error.message || 'Invalid credentials';
-    }
-  }
-
-  // ================== REGISTER ==================
-  async function handleRegister(event) {
-    event.preventDefault();
-    clearErrors('reg-');
-
-    const name = document.getElementById('register-name').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value.trim();
-    const confirm = document.getElementById('register-confirm').value.trim();
-
-    if (password !== confirm) {
-      document.getElementById('reg-confirm-error').textContent = 'Passwords do not match';
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-
-      const payload = await response.json();
-
-      if (!response.ok) throw new Error(payload.error || 'Registration failed');
-
-      db.saveAuthSession(payload.user, payload.token);
-      alert(`Account created! Welcome, ${payload.user.name || payload.user.username}!`);
-      window.location.href = '../../../index.html';
-    } catch (error) {
-      console.error(error);
-      document.getElementById('reg-password-error').textContent = error.message;
-    }
-  }
-
-  // ================== DOM READY ==================
-  document.addEventListener('DOMContentLoaded', () => {
-    // Login form
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) loginForm.addEventListener('submit', handleLogin);
-
-    // Register form
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) registerForm.addEventListener('submit', handleRegister);
-
-    if (typeof setupHeader === 'function') setupHeader();
-  });
-</script>
+>>>>>>> 0f30dd2698b7fca3e908222f31247a843618a7e5
+  </script>
 </body>
 </html>
