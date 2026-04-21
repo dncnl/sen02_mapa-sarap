@@ -207,7 +207,7 @@ function updateHeaderAuth() {
 
   let html = '';
 
-  if (user && token) {
+  if (user && db.getToken()) {
     html = `
       <span class="text-sm text-muted-foreground">Hello, ${user.name || user.username || 'User'}!</span>
       <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
