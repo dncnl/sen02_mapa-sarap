@@ -201,6 +201,7 @@ function setupHeader() {
 
 function updateHeaderAuth() {
   const user = db.getUser();
+  const token = db.getToken();
   const authContainer = document.querySelector('.header-actions');
 
   if (!authContainer) return;
@@ -268,21 +269,71 @@ window.setRating = (id, value, element) => {
 function renderReviews(reviewsList, containerId = 'reviews-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
+
+  const user = db.getUser();
+  const token = db.getToken();
+
   if (reviewsList.length === 0) {
     container.innerHTML = '<p class="text-muted-foreground">No reviews yet. Be the first to share your experience!</p>';
     return;
   }
+
   container.innerHTML = reviewsList.map(review => `
-    <div class="review-item" style="padding: 1rem 0; border-bottom: 1px solid var(--border);">
-      <div class="review-header" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-        <div class="review-author" style="font-weight: 700;">${review.userName}</div>
-        <div class="review-date" style="font-size: 0.8rem; color: var(--muted-foreground);">${new Date(review.date).toLocaleDateString()}</div>
+    <div class="review-item">
+      <div class="review-header">
+        <div class="review-author">${review.userName}</div>
+        <div class="review-date">${new Date(review.date).toLocaleDateString()}</div>
       </div>
-      <div class="review-rating" style="margin-bottom: 0.5rem;">${renderStars(review.rating)}</div>
-      <p class="review-comment" style="font-size: 0.95rem;">${review.comment}</p>
+      <div class="review-rating">${renderStars(review.rating)}</div>
+      <p class="review-text">${review.comment}</p>
+      <div class="review-actions-row">
+        <button
+          type="button"
+          class="review-helpful-btn ${review.hasHelpfulVote ? 'voted' : ''}"
+          data-review-id="${review.id}"
+          onclick="handleReviewHelpfulVote(this)"
+          ${!user || !token ? 'disabled' : ''}
+        >
+          <span>${review.hasHelpfulVote ? 'Helpful' : 'Mark as helpful'}</span>
+          <span class="review-helpful-count">(${review.helpfulCount || 0})</span>
+        </button>
+        ${(!user || !token)
+          ? `<span class="review-helpful">Login to vote</span>`
+          : ''}
+      </div>
     </div>
   `).join('');
 }
+
+window.handleReviewHelpfulVote = async (button) => {
+  const reviewId = parseInt(button?.dataset?.reviewId, 10);
+  if (!Number.isInteger(reviewId) || reviewId <= 0) return;
+
+  const token = db.getToken();
+  if (!token) {
+    window.location.href = pagePaths.loginPath;
+    return;
+  }
+
+  const originalDisabled = button.disabled;
+  button.disabled = true;
+
+  try {
+    const result = await toggleReviewHelpfulVote(reviewId, token);
+    const voted = !!result.voted;
+    const helpfulCount = Number(result.helpfulCount) || 0;
+
+    button.classList.toggle('voted', voted);
+    button.innerHTML = `
+      <span>${voted ? 'Helpful' : 'Mark as helpful'}</span>
+      <span class="review-helpful-count">(${helpfulCount})</span>
+    `;
+  } catch (error) {
+    alert(error.message || 'Failed to update helpful vote');
+  } finally {
+    button.disabled = originalDisabled;
+  }
+};
 
 // ============================================
 // RESTAURANT CARD RENDERING

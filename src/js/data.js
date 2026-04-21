@@ -221,6 +221,24 @@ async function fetchReviews(placeId) {
   }
 }
 
+async function toggleReviewHelpfulVote(reviewId, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reviewId }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Failed to update helpful vote');
+  }
+
+  return payload;
+}
+
 /**
  * Fetch statistics from API
  * @returns {Object} stats object
