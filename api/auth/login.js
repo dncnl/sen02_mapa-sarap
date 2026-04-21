@@ -1,6 +1,6 @@
 const { sql } = require('@vercel/postgres');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { signAuthToken } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
