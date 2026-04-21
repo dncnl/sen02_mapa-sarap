@@ -56,7 +56,11 @@
       const user = db.getUser();
       const favoritesContent = document.getElementById('favorites-content');
 
+      console.log('=== renderFavorites DEBUG ===');
+      console.log('User:', user);
+
       if (!user) {
+        console.log('No user found, showing login prompt');
         favoritesContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">🔒</div>
@@ -69,8 +73,18 @@
       }
 
       const favorites = db.getFavorites();
+      console.log('Favorites array:', favorites);
+      console.log('Restaurants available:', restaurants.length);
+      console.log('All restaurant IDs:', restaurants.map(r => r.id));
+
+      if (!Array.isArray(favorites)) {
+        console.warn('Favorites is not an array!', favorites);
+        favoritesContent.innerHTML = `<p>Error loading favorites</p>`;
+        return;
+      }
 
       if (favorites.length === 0) {
+        console.log('No favorites found');
         favoritesContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">♡</div>
@@ -83,10 +97,22 @@
       }
 
       const favoriteRestaurants = favorites
-        .map(id => getRestaurantById(id))
+        .map(id => {
+          console.log(`Looking for restaurant with ID: ${id} (type: ${typeof id})`);
+          const restaurant = getRestaurantById(id);
+          if (!restaurant) {
+            console.warn(`Restaurant ${id} not found in restaurants array`);
+          } else {
+            console.log(`Found: ${restaurant.name}`);
+          }
+          return restaurant;
+        })
         .filter(r => r !== undefined);
 
+      console.log('Favorite restaurants found:', favoriteRestaurants.length);
+
       if (favoriteRestaurants.length === 0) {
+        console.log('No matching restaurants found for favorites');
         favoritesContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">♡</div>
@@ -103,7 +129,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      console.log('Favorites page loaded');
+      console.log('Restaurants before init:', restaurants ? restaurants.length : 'undefined');
       await initializeData();
+      console.log('Restaurants after init:', restaurants ? restaurants.length : 'undefined');
       await renderFavorites();
       setupHeader();
     });

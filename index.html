@@ -338,6 +338,34 @@
       const statsGrid = document.getElementById('stats-grid');
       if (!statsGrid) return;
       
+      // Build Top Rated Dish card
+      const topDishCard = stats.topRatedDish ? `
+        <div class="stat-card" style="cursor: pointer;" onclick="handleStatClick('topDish', ${stats.topRatedDish.restaurantId})">
+          <div class="stat-value" style="font-size: 1.5rem;">${renderStars(stats.topRatedDish.avgRating)}</div>
+          <div class="stat-label" style="font-size: 0.85rem; font-weight: 600;">${stats.topRatedDish.name}</div>
+          <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">${stats.topRatedDish.restaurantName} • ${stats.topRatedDish.reviewCount} reviews</div>
+        </div>
+      ` : `
+        <div class="stat-card placeholder">
+          <div class="stat-value" style="font-size: 1.25rem;">-</div>
+          <div class="stat-label">Top Rated Dish</div>
+        </div>
+      `;
+
+      // Build Active Foodies card
+      const activeFoodiesCard = stats.activeFoodies > 0 ? `
+        <div class="stat-card" style="cursor: pointer;" onclick="handleStatClick('foodies')">
+          <div class="stat-value">${stats.activeFoodies}</div>
+          <div class="stat-label">Active Foodies</div>
+          <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Community Members</div>
+        </div>
+      ` : `
+        <div class="stat-card placeholder">
+          <div class="stat-value" style="font-size: 1.25rem;">0</div>
+          <div class="stat-label">Active Foodies</div>
+        </div>
+      `;
+      
       statsGrid.innerHTML = `
         <div class="stat-card">
           <div class="stat-value">${stats.totalRestaurants}</div>
@@ -351,15 +379,19 @@
           <div class="stat-value">${stats.totalReviews}</div>
           <div class="stat-label">Total Reviews</div>
         </div>
-        <div class="stat-card placeholder">
-          <div class="stat-value" style="font-size: 1.25rem;">Pending</div>
-          <div class="stat-label">Top Rated Dish</div>
-        </div>
-        <div class="stat-card placeholder">
-          <div class="stat-value" style="font-size: 1.25rem;">TBA</div>
-          <div class="stat-label">Active Foodies</div>
-        </div>
+        ${topDishCard}
+        ${activeFoodiesCard}
       `;
+    }
+
+    function handleStatClick(statType, restaurantId = null) {
+      if (statType === 'topDish' && restaurantId) {
+        // Navigate to the restaurant detail page for the top-rated dish
+        window.location.href = `/src/pages/restaurant-detail.html?id=${restaurantId}`;
+      } else if (statType === 'foodies') {
+        // Navigate to leaderboard to see active foodies
+        window.location.href = '/src/pages/leaderboard.html';
+      }
     }
 
     function switchView(view) {

@@ -299,7 +299,9 @@ async function fetchStats() {
       totalRestaurants: fallback.length,
       avgRating: (fallback.reduce((sum, r) => sum + r.rating, 0) / fallback.length).toFixed(1),
       totalReviews: FALLBACK_DATA.reviews.length,
-      totalRatings: fallback.reduce((sum, r) => sum + r.reviewCount, 0)
+      totalRatings: fallback.reduce((sum, r) => sum + r.reviewCount, 0),
+      topRatedDish: null,
+      activeFoodies: 0
     };
   }
 }
