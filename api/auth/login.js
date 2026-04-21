@@ -42,11 +42,12 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, role: user.role },
-      process.env.JWT_SECRET || 'mapa_secret_key',
-      { expiresIn: '7d' }
-    );
+    // const token = jwt.sign(
+    //   { userId: user.id, role: user.role },
+    //   process.env.JWT_SECRET || 'mapa_secret_key',
+    //   { expiresIn: '7d' }
+    // );
+    const token = signAuthToken({ userId: user.id, role: user.role });
 
     return res.status(200).json({
       token,
