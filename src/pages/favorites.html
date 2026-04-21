@@ -53,7 +53,7 @@
   <script src="../js/common.js"></script>
   <script>
     async function renderFavorites() {
-      const user = storage.getUser();
+      const user = db.getUser();
       const favoritesContent = document.getElementById('favorites-content');
 
       if (!user) {
@@ -68,7 +68,7 @@
         return;
       }
 
-      const favorites = storage.getFavorites();
+      const favorites = db.getFavorites();
 
       if (favorites.length === 0) {
         favoritesContent.innerHTML = `

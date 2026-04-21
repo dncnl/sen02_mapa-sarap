@@ -44,7 +44,7 @@
   <script src="../js/common.js"></script>
   <script>
     function renderProfile() {
-      const user = storage.getUser();
+      const user = db.getUser();
       const profileContent = document.getElementById('profile-content');
 
       if (!user) {
@@ -59,7 +59,7 @@
         return;
       }
 
-      const favorites = storage.getFavorites();
+      const favorites = db.getFavorites();
 
       profileContent.innerHTML = `
         <div class="profile-header">
