@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(200).json({ text: "SarapBot is not configured yet. Please set GEMINI_API_KEY in Vercel." });
+    return res.status(200).json({ text: "SarapBot is not configured yet." });
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -14,16 +14,11 @@ module.exports = async (req, res) => {
 
   let contextText = "Database is temporarily unavailable.";
 
-  // Always fetch fresh data (no broken in-memory cache)
+  // Fetch real data
   try {
     const result = await sql`
       SELECT 
-        p.id, 
-        p.name, 
-        p.cuisine, 
-        p.price_range, 
-        p.is_open, 
-        p.address,
+        p.id, p.name, p.cuisine, p.price_range, p.is_open, p.address,
         COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0) as avg_rating,
         COUNT(r.id) as review_count,
         STRING_AGG(DISTINCT d.name, ', ') as popular_dishes
@@ -65,32 +60,44 @@ Rules:
 </div>
 `;
 
-  // Modern models + fallback
+  // Model priority + retry for rate limits
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
   for (const modelName of models) {
-    try {
-      const model = genAI.getGenerativeModel({ model: modelName });
+    let attempts = 0;
+    const maxAttempts = 2;
 
-      const chat = model.startChat({
-        history: [
-          { role: "user", parts: [{ text: SYSTEM_INSTRUCTION }] },
-          { role: "model", parts: [{ text: "Mangan tana! I'm connected to the real database." }] },
-          ...history
-        ]
-      });
+    while (attempts < maxAttempts) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
 
-      const result = await chat.sendMessage(message);
-      return res.status(200).json({ text: result.response.text() });
+        const chat = model.startChat({
+          history: [
+            { role: "user", parts: [{ text: SYSTEM_INSTRUCTION }] },
+            { role: "model", parts: [{ text: "Mangan tana! I'm connected to the real database." }] },
+            ...history
+          ]
+        });
 
-    } catch (err) {
-      console.log(`Model ${modelName} failed:`, err.status || err.message);
-      if (err.status !== 503) break;
+        const result = await chat.sendMessage(message);
+        return res.status(200).json({ text: result.response.text() });
+
+      } catch (err) {
+        attempts++;
+        console.log(`Model ${modelName} failed (attempt ${attempts}):`, err.status || err.message);
+
+        // If it's a rate limit, wait a bit and retry once
+        if (err.status === 429 && attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1200)); // 1.2 second backoff
+          continue;
+        }
+        break; // other errors → try next model
+      }
     }
   }
 
-  // Ultimate fallback
+  // Final friendly fallback (always shown on any error)
   return res.status(200).json({
-    text: "SarapBot is a bit busy right now 😅 Try asking me again in a few seconds!"
+    text: "SarapBot is a bit busy right now 😅 Try asking me again in 10–15 seconds!"
   });
 };
