@@ -208,8 +208,12 @@ function updateHeaderAuth() {
   let html = '';
 
   if (user && db.getToken()) {
+    const adminBtn = user.role === 'admin' 
+      ? `<a href="${pagePaths.homePath.replace('index.html', 'src/pages/admin/index.html')}" class="btn btn-small btn-primary" style="margin-right: 0.5rem;">Admin Panel</a>`
+      : '';
     html = `
-      <span class="text-sm text-muted-foreground">Hello, ${user.name || user.username || 'User'}!</span>
+      <span class="text-sm text-muted-foreground" style="margin-right: 0.5rem;">Hello, ${user.name || user.username || 'User'}!</span>
+      ${adminBtn}
       <button class="btn btn-small btn-outline" onclick="logout()">Logout</button>
     `;
   } else {

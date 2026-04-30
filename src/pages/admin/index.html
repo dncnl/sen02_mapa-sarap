@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – MAPA-Sarap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #C1440E;
+      --primary-dark: #a83809;
+      --secondary: #F5A623;
+      --success: #059669;
+      --error: #DC2626;
+      --warning: #d97706;
+      --bg: #F4F5F7;
+      --card: #FFFFFF;
+      --border: #E5E7EB;
+      --text: #1E1E1E;
+      --muted: #6B7280;
+      --sidebar-bg: #18181B;
+      --sidebar-text: #A1A1AA;
+      --sidebar-active: #C1440E;
+      --radius: 10px;
+      --font: 'Poppins', sans-serif;
+      --font-title: 'League Spartan', sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); display:flex; min-height:100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--sidebar-bg);
+      display: flex; flex-direction: column; position: fixed; top:0; left:0; z-index:100;
+      transition: transform 0.3s;
+    }
+    .sidebar-logo {
+      padding: 1.5rem 1.25rem; border-bottom: 1px solid #27272a;
+      display: flex; align-items: center; gap: 0.625rem;
+    }
+    .sidebar-logo .icon {
+      width:36px; height:36px; background: var(--primary); border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-family: var(--font-title); color:#fff; font-size:1.1rem; font-weight:700;
+    }
+    .sidebar-logo .title { color:#fff; font-family:var(--font-title); font-size:1rem; font-weight:700; line-height:1.2; }
+    .sidebar-logo .subtitle { color: var(--sidebar-text); font-size:0.65rem; }
+    .sidebar-nav { flex:1; padding: 1rem 0; }
+    .nav-label { font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:#52525b; padding:0.75rem 1.25rem 0.25rem; }
+    .nav-item {
+      display:flex; align-items:center; gap:0.75rem;
+      padding:0.75rem 1.25rem; cursor:pointer; border:none; background:none;
+      color: var(--sidebar-text); font-family:var(--font); font-size:0.875rem; font-weight:500;
+      width:100%; text-align:left; transition: all 0.2s; border-left: 3px solid transparent;
+    }
+    .nav-item:hover { color:#fff; background:rgba(255,255,255,0.05); }
+    .nav-item.active { color:#fff; background:rgba(193,68,14,0.15); border-left-color: var(--primary); }
+    .nav-item .icon { font-size:1.1rem; width:20px; text-align:center; }
+    .nav-item .badge {
+      margin-left:auto; background: var(--primary); color:#fff;
+      border-radius:999px; font-size:0.7rem; font-weight:700; padding:1px 7px;
+    }
+    .sidebar-footer { padding:1rem 1.25rem; border-top:1px solid #27272a; }
+    .logout-btn {
+      width:100%; padding:0.625rem; background:rgba(220,38,38,0.12); border:1px solid rgba(220,38,38,0.3);
+      border-radius:8px; color:#fca5a5; font-family:var(--font); font-size:0.8rem; font-weight:500;
+      cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+    }
+    .logout-btn:hover { background:rgba(220,38,38,0.25); color:#fff; }
+
+    /* ── MAIN ── */
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar {
+      background: var(--card); border-bottom:1px solid var(--border);
+      padding:1rem 1.75rem; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:50; box-shadow:0 1px 4px rgba(0,0,0,0.06);
+    }
+    .topbar-title { font-family:var(--font-title); font-size:1.25rem; font-weight:700; }
+    .topbar-title span { color: var(--primary); }
+    .admin-badge {
+      display:flex; align-items:center; gap:0.5rem;
+      background:#fef3f2; border:1px solid #fecaca; border-radius:999px;
+      padding:0.35rem 0.875rem; font-size:0.8rem; font-weight:600; color: var(--primary);
+    }
+    .hamburger { display:none; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text); }
+
+    .content { padding:1.75rem; flex:1; }
+
+    /* ── STATS ── */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.75rem; }
+    .stat-card {
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.25rem; display:flex; align-items:center; gap:1rem;
+      box-shadow:0 1px 3px rgba(0,0,0,0.05); transition:box-shadow 0.2s;
+    }
+    .stat-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    .stat-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+    .stat-icon.terracotta { background:#fef3f2; }
+    .stat-icon.amber      { background:#fffbeb; }
+    .stat-icon.green      { background:#f0fdf4; }
+    .stat-icon.blue       { background:#eff6ff; }
+    .stat-value { font-family:var(--font-title); font-size:1.75rem; font-weight:800; line-height:1; }
+    .stat-label { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+
+    /* ── SECTION ── */
+    .section { display:none; }
+    .section.active { display:block; }
+    .section-header {
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      gap:0.75rem; margin-bottom:1.25rem;
+    }
+    .section-header h2 { font-family:var(--font-title); font-size:1.3rem; font-weight:700; }
+    .section-toolbar { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; }
+    .search-box {
+      position:relative;
+    }
+    .search-box input {
+      padding:0.5rem 0.75rem 0.5rem 2rem; border:1px solid var(--border);
+      border-radius:8px; font-family:var(--font); font-size:0.85rem; background:var(--card);
+      width:200px; transition:border-color 0.2s;
+    }
+    .search-box input:focus { outline:none; border-color:var(--primary); }
+    .search-box::before { content:'🔍'; position:absolute; left:0.5rem; top:50%; transform:translateY(-50%); font-size:0.8rem; }
+
+    /* ── BUTTONS ── */
+    .btn { padding:0.5rem 1rem; border:none; border-radius:8px; cursor:pointer; font-family:var(--font); font-size:0.85rem; font-weight:500; display:inline-flex; align-items:center; gap:0.4rem; transition:all 0.2s; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); box-shadow:0 3px 8px rgba(193,68,14,0.35); }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn-outline:hover { background:var(--bg); }
+    .btn-danger { background:#fef2f2; border:1px solid #fecaca; color:var(--error); }
+    .btn-danger:hover { background:#fee2e2; }
+    .btn-success { background:#ecfdf5; border:1px solid #a7f3d0; color:var(--success); }
+    .btn-success:hover { background:#d1fae5; }
+    .btn-sm { padding:0.35rem 0.7rem; font-size:0.78rem; }
+
+    /* ── TABLE ── */
+    .table-wrap { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+    table { width:100%; border-collapse:collapse; }
+    thead { background:#f9fafb; }
+    th { padding:0.75rem 1rem; text-align:left; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); border-bottom:1px solid var(--border); }
+    td { padding:0.875rem 1rem; font-size:0.875rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#fafafa; }
+    .td-actions { display:flex; gap:0.5rem; }
+    .empty-row td { text-align:center; color:var(--muted); padding:3rem; }
+
+    /* ── STATUS BADGE ── */
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:0.72rem; font-weight:600; }
+    .badge-open  { background:#ecfdf5; color:#065f46; }
+    .badge-closed{ background:#fef2f2; color:#991b1b; }
+    .badge-cuisine{ background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; }
+    .badge-price  { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+    .place-img { width:44px; height:36px; object-fit:cover; border-radius:6px; background:var(--bg); }
+    .td-name { font-weight:600; }
+    .td-sub  { font-size:0.75rem; color:var(--muted); margin-top:1px; }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:200;
+      display:flex; align-items:center; justify-content:center; padding:1rem;
+      opacity:0; pointer-events:none; transition:opacity 0.25s;
+    }
+    .modal-backdrop.open { opacity:1; pointer-events:all; }
+    .modal {
+      background:var(--card); border-radius:14px; width:100%; max-width:640px; max-height:90vh;
+      overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      transform:translateY(20px); transition:transform 0.25s;
+    }
+    .modal-backdrop.open .modal { transform:translateY(0); }
+    .modal-header {
+      padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--card); z-index:1;
+    }
+    .modal-header h3 { font-family:var(--font-title); font-size:1.1rem; font-weight:700; }
+    .modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1; padding:0.25rem; border-radius:6px; }
+    .modal-close:hover { background:var(--bg); color:var(--text); }
+    .modal-body { padding:1.5rem; }
+    .modal-footer { padding:1rem 1.5rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:0.75rem; }
+
+    /* ── FORM ── */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .form-grid .span2 { grid-column:1/-1; }
+    .form-group { display:flex; flex-direction:column; gap:0.375rem; }
+    .form-group label { font-size:0.8rem; font-weight:600; color:var(--text); }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:0.625rem 0.75rem; border:1px solid var(--border); border-radius:8px;
+      font-family:var(--font); font-size:0.875rem; background:var(--card); color:var(--text);
+      transition:border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(193,68,14,0.1);
+    }
+    .form-group textarea { resize:vertical; min-height:80px; }
+    .form-group .hint { font-size:0.72rem; color:var(--muted); }
+    .toggle-wrap { display:flex; align-items:center; gap:0.5rem; }
+    .toggle { position:relative; display:inline-block; width:40px; height:22px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#d1d5db; border-radius:22px; cursor:pointer; transition:0.2s; }
+    .toggle-slider:before { content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.2s; }
+    .toggle input:checked + .toggle-slider { background:var(--success); }
+    .toggle input:checked + .toggle-slider:before { transform:translateX(18px); }
+
+    /* ── AMENITIES CHIPS ── */
+    .amenity-chips { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.75rem; }
+    .chip {
+      display:inline-flex; align-items:center; gap:0.35rem;
+      background:#f4f5f7; border:1px solid var(--border); border-radius:999px;
+      padding:0.25rem 0.75rem; font-size:0.8rem; font-weight:500;
+    }
+    .chip-del { background:none; border:none; cursor:pointer; color:var(--muted); font-size:0.9rem; line-height:1; padding:0; }
+    .chip-del:hover { color:var(--error); }
+
+    /* ── TOAST ── */
+    .toast-wrap { position:fixed; bottom:1.5rem; right:1.5rem; z-index:999; display:flex; flex-direction:column; gap:0.5rem; }
+    .toast {
+      padding:0.75rem 1.25rem; border-radius:10px; font-size:0.875rem; font-weight:500;
+      box-shadow:0 4px 16px rgba(0,0,0,0.15); display:flex; align-items:center; gap:0.5rem;
+      animation:slideIn 0.3s ease; max-width:320px;
+    }
+    .toast-success { background:#ecfdf5; border:1px solid #6ee7b7; color:#065f46; }
+    .toast-error   { background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; }
+    @keyframes slideIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    /* ── CONFIRM DIALOG ── */
+    .confirm-backdrop {
+      position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300;
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity 0.2s;
+    }
+    .confirm-backdrop.open { opacity:1; pointer-events:all; }
+    .confirm-box { background:var(--card); border-radius:12px; padding:1.75rem; max-width:380px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+    .confirm-box h4 { font-family:var(--font-title); font-size:1.1rem; margin-bottom:0.5rem; }
+    .confirm-box p  { font-size:0.875rem; color:var(--muted); margin-bottom:1.25rem; }
+    .confirm-actions { display:flex; gap:0.75rem; justify-content:flex-end; }
+
+    /* ── PLACE PICKER (Dishes / Amenities) ── */
+    .place-picker { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+    .place-picker label { font-size:0.8rem; font-weight:600; display:block; margin-bottom:0.5rem; }
+    .place-picker select { max-width:320px; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-family:var(--font); font-size:0.875rem; }
+    .place-picker select:focus { outline:none; border-color:var(--primary); }
+
+    /* ── LOADING ── */
+    .loading { text-align:center; padding:3rem; color:var(--muted); font-size:0.9rem; }
+    .spinner { display:inline-block; width:22px; height:22px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.7s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── MOBILE ── */
+    @media(max-width:768px){
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .main { margin-left:0; }
+      .hamburger { display:block; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .form-grid { grid-template-columns:1fr; }
+      .form-grid .span2 { grid-column:1; }
+      table { display:block; overflow-x:auto; }
+      .content { padding:1rem; }
+    }
+    @media(max-width:480px){
+      .stats-row { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">M</div>
+    <div>
+      <div class="title">MAPA-Sarap</div>
+      <div class="subtitle">Admin Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Manage</div>
+    <button class="nav-item active" data-section="places" onclick="switchSection('places')">
+      <span class="icon">🍽️</span> Places
+      <span class="badge" id="nav-places-count">0</span>
+    </button>
+    <button class="nav-item" data-section="dishes" onclick="switchSection('dishes')">
+      <span class="icon">🥘</span> Dishes
+      <span class="badge" id="nav-dishes-count">0</span>
+    </button>
+    <button class="nav-item" data-section="amenities" onclick="switchSection('amenities')">
+      <span class="icon">✨</span> Amenities
+      <span class="badge" id="nav-amenities-count">0</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="font-size:0.75rem;color:#52525b;margin-bottom:0.5rem;">Signed in as</div>
+    <div style="color:#e4e4e7;font-size:0.875rem;font-weight:600;margin-bottom:0.75rem;" id="sidebar-user">Admin</div>
+    <button class="logout-btn" onclick="logout()">🚪 Sign Out</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title">MAPA-Sarap <span>Admin</span></div>
+    </div>
+    <div class="admin-badge">🔑 Administrator</div>
+  </header>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon terracotta">🍽️</div>
+        <div><div class="stat-value" id="stat-places">—</div><div class="stat-label">Total Places</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">🥘</div>
+        <div><div class="stat-value" id="stat-dishes">—</div><div class="stat-label">Total Dishes</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">✨</div>
+        <div><div class="stat-value" id="stat-amenities">—</div><div class="stat-label">Amenities</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">🟢</div>
+        <div><div class="stat-value" id="stat-open">—</div><div class="stat-label">Open Now</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ PLACES SECTION ═══ -->
+    <section class="section active" id="section-places">
+      <div class="section-header">
+        <h2>🍽️ Places</h2>
+        <div class="section-toolbar">
+          <div class="search-box">
+            <input type="text" id="places-search" placeholder="Search places…" oninput="filterPlaces()">
+          </div>
+          <button class="btn btn-primary" onclick="openPlaceModal()">＋ Add Place</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Image</th><th>Name</th><th>Cuisine</th>
+            <th>Price</th><th>Status</th><th>Dishes</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="places-tbody"><tr class="empty-row"><td colspan="7"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ DISHES SECTION ═══ -->
+    <section class="section" id="section-dishes">
+      <div class="section-header">
+        <h2>🥘 Dishes</h2>
+        <div class="section-toolbar">
+          <div class="search-box">
+            <input type="text" id="dishes-search" placeholder="Search dishes…" oninput="filterDishes()">
+          </div>
+          <button class="btn btn-primary" onclick="openDishModal()">＋ Add Dish</button>
+        </div>
+      </div>
+      <div class="place-picker">
+        <label for="dishes-place-filter">Filter by Place</label>
+        <select id="dishes-place-filter" onchange="loadDishes()">
+          <option value="">All Places</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Place</th><th>Price</th><th>Description</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="dishes-tbody"><tr class="empty-row"><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ AMENITIES SECTION ═══ -->
+    <section class="section" id="section-amenities">
+      <div class="section-header">
+        <h2>✨ Amenities</h2>
+      </div>
+      <div class="place-picker">
+        <label for="amenities-place-filter">Select a Place to manage amenities</label>
+        <select id="amenities-place-filter" onchange="loadAmenities()">
+          <option value="">— Choose a place —</option>
+        </select>
+      </div>
+      <!-- Add amenity inline -->
+      <div id="add-amenity-wrap" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;">
+        <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.75rem;">Add New Amenity</div>
+        <div style="display:flex;gap:0.625rem;flex-wrap:wrap;">
+          <input type="text" id="new-amenity-input" placeholder="e.g. Free Wi-Fi, Parking, Halal…" style="flex:1;min-width:180px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:0.875rem;">
+          <button class="btn btn-primary" onclick="addAmenity()">＋ Add</button>
+        </div>
+        <div class="amenity-chips" id="amenity-chips"></div>
+      </div>
+      <div id="amenities-empty" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:3rem;text-align:center;color:var(--muted);">
+        Select a place above to view and manage its amenities.
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══════════════ PLACE MODAL ══════════════ -->
+<div class="modal-backdrop" id="place-modal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="place-modal-title">Add New Place</h3>
+      <button class="modal-close" onclick="closePlaceModal()">✕</button>
+    </div>
+    <form id="place-form" onsubmit="submitPlace(event)">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span2">
+            <label>Restaurant Name *</label>
+            <input type="text" id="p-name" required placeholder="e.g. Jollibee Nepo Mall">
+          </div>
+          <div class="form-group">
+            <label>Cuisine *</label>
+            <select id="p-cuisine" required>
+              <option value="">— Select —</option>
+              <option>Filipino</option><option>Chinese</option><option>Japanese</option>
+              <option>Korean</option><option>American</option><option>Italian</option>
+              <option>Fast Food</option><option>Seafood</option><option>BBQ</option>
+              <option>Café</option><option>Desserts</option><option>Pizza</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Price Range</label>
+            <select id="p-price">
+              <option value="">— Select —</option>
+              <option value="₱">₱ Budget</option>
+              <option value="₱₱">₱₱ Moderate</option>
+              <option value="₱₱₱">₱₱₱ Upscale</option>
+            </select>
+          </div>
+          <div class="form-group span2">
+            <label>Description</label>
+            <textarea id="p-desc" placeholder="Short description of the restaurant…"></textarea>
+          </div>
+          <div class="form-group span2">
+            <label>Address</label>
+            <input type="text" id="p-address" placeholder="e.g. MacArthur Highway, Angeles City">
+          </div>
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" step="any" id="p-lat" placeholder="15.1442">
+            <span class="hint">Decimal degrees (e.g. 15.1442)</span>
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" step="any" id="p-lng" placeholder="120.5955">
+            <span class="hint">Decimal degrees (e.g. 120.5955)</span>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="p-phone" placeholder="+63 45 …">
+          </div>
+          <div class="form-group">
+            <label>Website</label>
+            <input type="url" id="p-website" placeholder="https://…">
+          </div>
+          <div class="form-group span2">
+            <label>Image URL</label>
+            <input type="url" id="p-image" placeholder="https://…/photo.jpg">
+          </div>
+          <div class="form-group span2">
+            <label>Opening Hours</label>
+            <input type="text" id="p-hours" placeholder="Mon–Sun 8:00 AM – 10:00 PM">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" id="p-isopen" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span id="p-isopen-label" style="font-size:0.85rem;">Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closePlaceModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="place-submit-btn">Save Place</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════ DISH MODAL ══════════════ -->
+<div class="modal-backdrop" id="dish-modal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="dish-modal-title">Add New Dish</h3>
+      <button class="modal-close" onclick="closeDishModal()">✕</button>
+    </div>
+    <form id="dish-form" onsubmit="submitDish(event)">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span2">
+            <label>Place *</label>
+            <select id="d-place" required>
+              <option value="">— Select Place —</option>
+            </select>
+          </div>
+          <div class="form-group span2">
+            <label>Dish Name *</label>
+            <input type="text" id="d-name" required placeholder="e.g. Crispy Pata">
+          </div>
+          <div class="form-group">
+            <label>Price (₱)</label>
+            <input type="number" step="0.01" min="0" id="d-price" placeholder="149.00">
+          </div>
+          <div class="form-group">
+            <label>Image URL</label>
+            <input type="url" id="d-image" placeholder="https://…">
+          </div>
+          <div class="form-group span2">
+            <label>Description</label>
+            <textarea id="d-desc" placeholder="What makes this dish special?"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeDishModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="dish-submit-btn">Save Dish</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-backdrop" id="confirm-dialog">
+  <div class="confirm-box">
+    <h4 id="confirm-title">Confirm Delete</h4>
+    <p id="confirm-msg">Are you sure? This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok" onclick="confirmOk()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIG & STATE
+// ═══════════════════════════════════════════════
+const BASE = '/api/admin';
+let TOKEN = '';
+let allPlaces = [];
+let allDishes = [];
+let editingPlaceId = null;
+let editingDishId = null;
+let confirmCallback = null;
+
+// ═══════════════════════════════════════════════
+//  INIT — AUTH GUARD
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const raw = localStorage.getItem('mapasarap_user') || localStorage.getItem('user');
+    const token = localStorage.getItem('mapasarap_token') || localStorage.getItem('token');
+    const userData = raw ? JSON.parse(raw) : null;
+
+    if (!userData || !token || userData.role !== 'admin') {
+      alert('Access denied. Admin role required.');
+      window.location.href = '/src/pages/auth/login.html';
+      return;
+    }
+
+    TOKEN = token;
+    document.getElementById('sidebar-user').textContent = userData.name || userData.username || 'Admin';
+  } catch(e) {
+    window.location.href = '/src/pages/auth/login.html';
+    return;
+  }
+
+  // Toggle is_open label
+  document.getElementById('p-isopen').addEventListener('change', function(){
+    document.getElementById('p-isopen-label').textContent = this.checked ? 'Open' : 'Closed';
+  });
+
+  loadAll();
+});
+
+// ═══════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════
+async function api(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ═══════════════════════════════════════════════
+//  LOAD ALL
+// ═══════════════════════════════════════════════
+async function loadAll() {
+  await Promise.all([loadPlaces(), loadDishes(), loadAmenitiesCount()]);
+}
+
+async function loadPlaces() {
+  try {
+    allPlaces = await api(`${BASE}/places`);
+    renderPlacesTable(allPlaces);
+    updateStats();
+    populatePlaceDropdowns();
+    document.getElementById('nav-places-count').textContent = allPlaces.length;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadDishes() {
+  try {
+    const placeId = document.getElementById('dishes-place-filter')?.value || '';
+    const url = placeId ? `${BASE}/dishes?placeId=${placeId}` : `${BASE}/dishes`;
+    allDishes = await api(url);
+    renderDishesTable(allDishes);
+    document.getElementById('nav-dishes-count').textContent = allDishes.length;
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadAmenitiesCount() {
+  try {
+    const data = await api(`${BASE}/amenities`);
+    document.getElementById('nav-amenities-count').textContent = data.length;
+    document.getElementById('stat-amenities').textContent = data.length;
+  } catch(e) {}
+}
+
+async function loadAmenities() {
+  const placeId = document.getElementById('amenities-place-filter').value;
+  const wrap = document.getElementById('add-amenity-wrap');
+  const empty = document.getElementById('amenities-empty');
+  if (!placeId) { wrap.style.display='none'; empty.style.display='block'; return; }
+  wrap.style.display='block'; empty.style.display='none';
+  try {
+    const data = await api(`${BASE}/amenities?placeId=${placeId}`);
+    renderAmenityChips(data);
+    loadAmenitiesCount();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('stat-places').textContent = allPlaces.length;
+  const totalDishes = allPlaces.reduce((s,p) => s + (parseInt(p.dish_count)||0), 0);
+  document.getElementById('stat-dishes').textContent = totalDishes;
+  document.getElementById('stat-open').textContent = allPlaces.filter(p=>p.is_open).length;
+}
+
+// ═══════════════════════════════════════════════
+//  PLACES TABLE
+// ═══════════════════════════════════════════════
+const PH_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='36'%3E%3Crect fill='%23e5e7eb' width='44' height='36'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='%239ca3af'%3E🍽%3C/text%3E%3C/svg%3E";
+
+function renderPlacesTable(data) {
+  const tbody = document.getElementById('places-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No places found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td><img class="place-img" src="${esc(p.image_url)||PH_IMG}" onerror="this.src='${PH_IMG}'" alt=""></td>
+      <td>
+        <div class="td-name">${esc(p.name)}</div>
+        <div class="td-sub">${esc(p.address||'—')}</div>
+      </td>
+      <td><span class="badge badge-cuisine">${esc(p.cuisine)}</span></td>
+      <td><span class="badge badge-price">${esc(p.price_range||'—')}</span></td>
+      <td><span class="badge ${p.is_open?'badge-open':'badge-closed'}">${p.is_open?'● Open':'● Closed'}</span></td>
+      <td>${p.dish_count||0} dishes</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-success btn-sm" onclick="editPlace(${p.id})">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlace(${p.id},'${esc(p.name)}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterPlaces() {
+  const q = document.getElementById('places-search').value.toLowerCase();
+  renderPlacesTable(allPlaces.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    (p.cuisine||'').toLowerCase().includes(q) ||
+    (p.address||'').toLowerCase().includes(q)
+  ));
+}
+
+// ═══════════════════════════════════════════════
+//  DISHES TABLE
+// ═══════════════════════════════════════════════
+function renderDishesTable(data) {
+  const tbody = document.getElementById('dishes-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No dishes found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td class="td-name">${esc(d.name)}</td>
+      <td>${esc(d.place_name||'—')}</td>
+      <td>${d.price ? '₱' + parseFloat(d.price).toFixed(2) : '—'}</td>
+      <td style="max-width:240px;color:var(--muted);font-size:0.8rem;">${esc((d.description||'').slice(0,80))}${(d.description||'').length>80?'…':''}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-success btn-sm" onclick="editDish(${d.id})">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDish(${d.id},'${esc(d.name)}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterDishes() {
+  const q = document.getElementById('dishes-search').value.toLowerCase();
+  renderDishesTable(allDishes.filter(d =>
+    d.name.toLowerCase().includes(q) ||
+    (d.place_name||'').toLowerCase().includes(q)
+  ));
+}
+
+// ═══════════════════════════════════════════════
+//  AMENITY CHIPS
+// ═══════════════════════════════════════════════
+function renderAmenityChips(list) {
+  const el = document.getElementById('amenity-chips');
+  if (!list.length) { el.innerHTML = '<span style="color:var(--muted);font-size:0.8rem;">No amenities yet. Add one above.</span>'; return; }
+  el.innerHTML = list.map(a => `
+    <span class="chip">
+      ${esc(a.amenity)}
+      <button class="chip-del" title="Delete" onclick="deleteAmenity(${a.id},'${esc(a.amenity)}')">✕</button>
+    </span>
+  `).join('');
+}
+
+async function addAmenity() {
+  const placeId = document.getElementById('amenities-place-filter').value;
+  const input = document.getElementById('new-amenity-input');
+  const val = input.value.trim();
+  if (!placeId || !val) { showToast('Select a place and enter an amenity name', 'error'); return; }
+  try {
+    await api(`${BASE}/amenities`, 'POST', { place_id: placeId, amenity: val });
+    input.value = '';
+    showToast('Amenity added!', 'success');
+    loadAmenities();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function deleteAmenity(id, name) {
+  openConfirm(`Delete amenity "${name}"?`, 'This will remove it from the place.', async () => {
+    await api(`${BASE}/amenities/${id}`, 'DELETE');
+    showToast('Amenity deleted', 'success');
+    loadAmenities();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  PLACE MODAL
+// ═══════════════════════════════════════════════
+function openPlaceModal(place = null) {
+  editingPlaceId = place ? place.id : null;
+  document.getElementById('place-modal-title').textContent = place ? 'Edit Place' : 'Add New Place';
+  document.getElementById('place-submit-btn').textContent = place ? 'Save Changes' : 'Save Place';
+  document.getElementById('p-name').value     = place?.name || '';
+  document.getElementById('p-cuisine').value  = place?.cuisine || '';
+  document.getElementById('p-price').value    = place?.price_range || '';
+  document.getElementById('p-desc').value     = place?.description || '';
+  document.getElementById('p-address').value  = place?.address || '';
+  document.getElementById('p-lat').value      = place?.latitude || '';
+  document.getElementById('p-lng').value      = place?.longitude || '';
+  document.getElementById('p-phone').value    = place?.phone || '';
+  document.getElementById('p-website').value  = place?.website || '';
+  document.getElementById('p-image').value    = place?.image_url || '';
+  document.getElementById('p-hours').value    = place?.opening_hours || '';
+  const isOpen = place ? !!place.is_open : true;
+  document.getElementById('p-isopen').checked = isOpen;
+  document.getElementById('p-isopen-label').textContent = isOpen ? 'Open' : 'Closed';
+  document.getElementById('place-modal').classList.add('open');
+}
+
+function closePlaceModal() {
+  document.getElementById('place-modal').classList.remove('open');
+  document.getElementById('place-form').reset();
+  editingPlaceId = null;
+}
+
+async function editPlace(id) {
+  try {
+    const place = await api(`${BASE}/places/${id}`);
+    openPlaceModal(place);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function submitPlace(e) {
+  e.preventDefault();
+  const btn = document.getElementById('place-submit-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  const body = {
+    name:          document.getElementById('p-name').value.trim(),
+    cuisine:       document.getElementById('p-cuisine').value,
+    description:   document.getElementById('p-desc').value.trim(),
+    address:       document.getElementById('p-address').value.trim(),
+    latitude:      document.getElementById('p-lat').value || null,
+    longitude:     document.getElementById('p-lng').value || null,
+    price_range:   document.getElementById('p-price').value,
+    phone:         document.getElementById('p-phone').value.trim(),
+    website:       document.getElementById('p-website').value.trim(),
+    image_url:     document.getElementById('p-image').value.trim(),
+    opening_hours: document.getElementById('p-hours').value.trim(),
+    is_open:       document.getElementById('p-isopen').checked,
+  };
+  try {
+    if (editingPlaceId) {
+      await api(`${BASE}/places/${editingPlaceId}`, 'PUT', body);
+      showToast('Place updated!', 'success');
+    } else {
+      await api(`${BASE}/places`, 'POST', body);
+      showToast('Place added!', 'success');
+    }
+    closePlaceModal();
+    loadAll();
+  } catch(err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingPlaceId ? 'Save Changes' : 'Save Place';
+  }
+}
+
+function deletePlace(id, name) {
+  openConfirm(`Delete "${name}"?`, 'All dishes and amenities for this place will also be removed.', async () => {
+    await api(`${BASE}/places/${id}`, 'DELETE');
+    showToast('Place deleted', 'success');
+    loadAll();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  DISH MODAL
+// ═══════════════════════════════════════════════
+function openDishModal(dish = null) {
+  editingDishId = dish ? dish.id : null;
+  document.getElementById('dish-modal-title').textContent = dish ? 'Edit Dish' : 'Add New Dish';
+  document.getElementById('dish-submit-btn').textContent  = dish ? 'Save Changes' : 'Save Dish';
+  document.getElementById('d-place').value  = dish?.place_id || '';
+  document.getElementById('d-name').value   = dish?.name || '';
+  document.getElementById('d-price').value  = dish?.price || '';
+  document.getElementById('d-image').value  = dish?.image_url || '';
+  document.getElementById('d-desc').value   = dish?.description || '';
+  document.getElementById('dish-modal').classList.add('open');
+}
+
+function closeDishModal() {
+  document.getElementById('dish-modal').classList.remove('open');
+  document.getElementById('dish-form').reset();
+  editingDishId = null;
+}
+
+async function editDish(id) {
+  try {
+    const dish = await api(`${BASE}/dishes/${id}`);
+    openDishModal(dish);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function submitDish(e) {
+  e.preventDefault();
+  const btn = document.getElementById('dish-submit-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  const body = {
+    place_id:    document.getElementById('d-place').value,
+    name:        document.getElementById('d-name').value.trim(),
+    price:       document.getElementById('d-price').value || null,
+    image_url:   document.getElementById('d-image').value.trim() || null,
+    description: document.getElementById('d-desc').value.trim() || null,
+  };
+  try {
+    if (editingDishId) {
+      await api(`${BASE}/dishes/${editingDishId}`, 'PUT', body);
+      showToast('Dish updated!', 'success');
+    } else {
+      await api(`${BASE}/dishes`, 'POST', body);
+      showToast('Dish added!', 'success');
+    }
+    closeDishModal();
+    loadDishes();
+  } catch(err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function deleteDish(id, name) {
+  openConfirm(`Delete dish "${name}"?`, 'This will also remove all dish reviews.', async () => {
+    await api(`${BASE}/dishes/${id}`, 'DELETE');
+    showToast('Dish deleted', 'success');
+    loadDishes();
+    loadAmenitiesCount();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  DROPDOWNS
+// ═══════════════════════════════════════════════
+function populatePlaceDropdowns() {
+  const opts = allPlaces.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  ['dishes-place-filter','amenities-place-filter','d-place'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const firstOpt = el.options[0];
+    el.innerHTML = '';
+    el.appendChild(firstOpt.cloneNode(true));
+    el.insertAdjacentHTML('beforeend', opts);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`section-${name}`).classList.add('active');
+  document.querySelector(`[data-section="${name}"]`).classList.add('active');
+  if (name === 'dishes') loadDishes();
+  if (window.innerWidth < 769) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function logout() {
+  localStorage.removeItem('mapasarap_token'); localStorage.removeItem('token');
+  localStorage.removeItem('mapasarap_user');  localStorage.removeItem('user');
+  window.location.href = '/src/pages/auth/login.html';
+}
+
+// ═══════════════════════════════════════════════
+//  CONFIRM DIALOG
+// ═══════════════════════════════════════════════
+function openConfirm(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirm-dialog').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-dialog').classList.remove('open');
+  confirmCallback = null;
+}
+async function confirmOk() {
+  if (!confirmCallback) return;
+  const btn = document.getElementById('confirm-ok');
+  btn.textContent = 'Deleting…'; btn.disabled = true;
+  try { await confirmCallback(); } catch(e) { showToast(e.message, 'error'); }
+  btn.textContent = 'Delete'; btn.disabled = false;
+  closeConfirm();
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${esc(msg)}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════
+//  UTIL
+// ═══════════════════════════════════════════════
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Close modals on backdrop click
+['place-modal','dish-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) {
+      if (id === 'place-modal') closePlaceModal();
+      if (id === 'dish-modal') closeDishModal();
+    }
+  });
+});
+document.getElementById('confirm-dialog').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm();
+});
+</script>
+</body>
+</html>
