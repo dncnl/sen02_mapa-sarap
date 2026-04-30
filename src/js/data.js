@@ -336,7 +336,7 @@ async function getStats() {
 
 // Get a single restaurant by ID
 function getRestaurantById(id) {
-  return restaurants.find(r => r.id === parseInt(id));
+  return restaurants.find(r => String(r.id) === String(id));
 }
 
 // Get all reviews for a restaurant

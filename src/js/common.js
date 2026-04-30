@@ -109,8 +109,9 @@ const db = {
     if (!key) return;
 
     const favorites = this.getFavorites();
-    if (!favorites.includes(restaurantId)) {
-      favorites.push(restaurantId);
+    const strId = String(restaurantId);
+    if (!favorites.map(String).includes(strId)) {
+      favorites.push(strId);
       localStorage.setItem(key, JSON.stringify(favorites));
     }
   },
@@ -120,12 +121,13 @@ const db = {
     if (!key) return;
 
     const favorites = this.getFavorites();
-    const filtered = favorites.filter(id => id !== restaurantId);
+    const strId = String(restaurantId);
+    const filtered = favorites.filter(id => String(id) !== strId);
     localStorage.setItem(key, JSON.stringify(filtered));
   },
 
   isFavorite(restaurantId) {
-    return this.getFavorites().includes(restaurantId);
+    return this.getFavorites().map(String).includes(String(restaurantId));
   },
 
   getUser() {
