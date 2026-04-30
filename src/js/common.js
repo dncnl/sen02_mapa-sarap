@@ -345,7 +345,7 @@ async function createRestaurantCard(restaurant) {
         </div>
         <button class="favorite-btn ${isFavorited ? 'active' : ''}" 
                 style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.9); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-                onclick="event.stopPropagation(); toggleFavorite(${restaurant.id}, this)">
+                onclick="event.stopPropagation(); toggleFavorite('${restaurant.id}', this)">
           <span style="font-size: 1.2rem; line-height: 1;">${isFavorited ? '♥' : '♡'}</span>
         </button>
       </div>
