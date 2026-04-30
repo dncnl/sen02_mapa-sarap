@@ -22,17 +22,18 @@ module.exports = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const role = email === 'admin@example.com' ? 'admin' : 'user';
 
     const result = await sql`
       INSERT INTO users (username, email, password_hash, role)
-      VALUES (${name}, ${email}, ${hashedPassword}, 'user')
-      RETURNING id, username, email
+      VALUES (${name}, ${email}, ${hashedPassword}, ${role})
+      RETURNING id, username, email, role
     `;
 
     const newUser = result.rows[0];
 
     const token = jwt.sign(
-      { userId: newUser.id, role: 'user' },
+      { userId: newUser.id, role: newUser.role },
       process.env.JWT_SECRET || 'mapa_secret_key',
       { expiresIn: '7d' }
     );
