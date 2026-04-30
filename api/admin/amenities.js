@@ -2,6 +2,7 @@
  * Admin API: /api/admin/amenities
  * GET  → list amenities for a place (?placeId=)
  * POST → add an amenity to a place
+ * DELETE → remove an amenity (if ?id= is provided)
  * Protected: admin role only
  */
 
@@ -10,7 +11,7 @@ const { getAuthUser } = require('../_lib/auth');
 
 function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
@@ -30,7 +31,18 @@ module.exports = async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden: Admin role required' });
 
+  const id = req.query.id ? parseInt(req.query.id, 10) : null;
+
   try {
+    if (id) {
+      if (req.method === 'DELETE') {
+        const { rows } = await sql`DELETE FROM place_amenities WHERE id = ${id} RETURNING id`;
+        if (!rows[0]) return res.status(404).json({ error: 'Amenity not found' });
+        return res.status(200).json({ deleted: true, id: rows[0].id });
+      }
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     if (req.method === 'GET') {
       const placeId = req.query.placeId ? parseInt(req.query.placeId, 10) : null;
 

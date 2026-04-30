@@ -145,7 +145,11 @@
 
         db.saveAuthSession(payload.user, payload.token);
         alert(`Welcome back, ${payload.user.name || payload.user.username || 'User'}!`);
-        window.location.href = '../../../index.html';
+        if (payload.user.role === 'admin') {
+          window.location.href = '../admin/index.html';
+        } else {
+          window.location.href = '../../../index.html';
+        }
       } catch (error) {
         console.error(error);
         document.getElementById('email-error').textContent = error.message || 'Invalid credentials';
