@@ -185,7 +185,11 @@
 
         db.saveAuthSession(payload.user, payload.token);
         alert(`Account created! Welcome, ${payload.user.name || payload.user.username}!`);
-        window.location.href = '../../../index.html';
+        if (payload.user.role === 'admin') {
+          window.location.href = '../admin/index.html';
+        } else {
+          window.location.href = '../../../index.html';
+        }
       } catch (error) {
         console.error(error);
         document.getElementById('reg-password-error').textContent = error.message;
