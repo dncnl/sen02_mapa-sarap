@@ -564,8 +564,8 @@ let confirmCallback = null;
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    const raw = localStorage.getItem('mapasarap_user') || localStorage.getItem('user');
-    const token = localStorage.getItem('mapasarap_token') || localStorage.getItem('token');
+    const raw = localStorage.getItem('mapa-user') || localStorage.getItem('mapasarap_user') || localStorage.getItem('user');
+    const token = localStorage.getItem('mapa-token') || localStorage.getItem('mapasarap_token') || localStorage.getItem('token');
     const userData = raw ? JSON.parse(raw) : null;
 
     if (!userData || !token || userData.role !== 'admin') {
@@ -949,8 +949,8 @@ function toggleSidebar() {
 }
 
 function logout() {
-  localStorage.removeItem('mapasarap_token'); localStorage.removeItem('token');
-  localStorage.removeItem('mapasarap_user');  localStorage.removeItem('user');
+  localStorage.removeItem('mapa-token'); localStorage.removeItem('mapasarap_token'); localStorage.removeItem('token');
+  localStorage.removeItem('mapa-user'); localStorage.removeItem('mapasarap_user');  localStorage.removeItem('user');
   window.location.href = '/src/pages/auth/login.html';
 }
 

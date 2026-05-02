@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
 
     return res.status(201).json({
       token,
-      user: { id: newUser.id, name: newUser.username, username: newUser.username, email: newUser.email }
+      user: { id: newUser.id, name: newUser.username, username: newUser.username, email: newUser.email, role: newUser.role }
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });

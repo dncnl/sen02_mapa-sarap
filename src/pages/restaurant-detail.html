@@ -52,12 +52,17 @@
       </section>
 
       <!-- Dish Reviews Section -->
-      <section class="dish-reviews-section">
-        <div class="dish-reviews-heading">
-          <h3>Dish Reviews</h3>
-          <div class="dish-review-controls">
-            <label for="dish-review-filter">Select Dish</label>
-            <select id="dish-review-filter" onchange="handleDishReviewSelection()">
+      <section class="dish-reviews-section" style="background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; margin-bottom: 2rem; border-top: 4px solid #6366f1;">
+        <div class="dish-reviews-heading" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.5rem;">⭐</span>
+            <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--foreground);">Dish Reviews</h3>
+            <span style="background: #6366f1; color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">PER DISH</span>
+          </div>
+          <p style="margin: 0; font-size: 0.85rem; color: var(--muted-foreground);">Rate individual dishes — one editable review per dish per user.</p>
+          <div class="dish-review-controls" style="margin-top: 1rem;">
+            <label for="dish-review-filter" style="font-size: 0.8rem; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;">Select Dish</label>
+            <select id="dish-review-filter" onchange="handleDishReviewSelection()" style="margin-top: 0.25rem;">
               <option value="">Choose a dish</option>
             </select>
           </div>
@@ -68,7 +73,8 @@
         </div>
 
         <div style="margin-top: 1.5rem;">
-          <button id="toggle-dish-form" class="btn btn-outline btn-small" onclick="document.getElementById('dish-review-form').classList.toggle('active'); this.textContent = document.getElementById('dish-review-form').classList.contains('active') ? '✕ Cancel' : '+ Write a Dish Review'">+ Write a Dish Review</button>
+          <button id="toggle-dish-form" class="btn btn-outline btn-small"
+            onclick="toggleDishReviewForm(this)">+ Write a Dish Review</button>
           <form class="review-form" id="dish-review-form" onsubmit="submitDishReview(event)" style="display: none; margin-top: 1rem;">
             <h4 style="margin-bottom: 1rem; font-weight: 600;">Rate This Dish</h4>
 
@@ -89,33 +95,47 @@
         <div class="review-list" id="dish-reviews-list"></div>
       </section>
 
-      <!-- Reviews Section -->
-      <section class="reviews-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="margin: 0;">Reviews</h3>
-          <button id="toggle-review-form" class="btn btn-primary btn-small" onclick="document.getElementById('review-form').classList.toggle('active'); this.textContent = document.getElementById('review-form').classList.contains('active') ? '✕ Cancel' : 'Write a Review'">Write a Review</button>
+      <!-- Restaurant Reviews Section -->
+      <section class="reviews-section" style="background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; border-top: 4px solid #f59e0b;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+              <span style="font-size: 1.5rem;">🏠</span>
+              <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--foreground);">Restaurant Experience</h3>
+              <span style="background: #f59e0b; color: #000; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">OVERALL</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--muted-foreground);">Share your overall restaurant experience — one editable review per user.</p>
+          </div>
+          <button id="toggle-review-form" class="btn btn-small" style="background: #f59e0b; color: #000; font-weight: 700; border: none;"
+            onclick="toggleRestaurantReviewForm(this)">✏️ Write a Review</button>
         </div>
 
         <!-- Review Form -->
-        <form class="review-form" id="review-form" onsubmit="submitReview(event)" style="display: none;">
-          <h4 style="margin-bottom: 1rem; font-weight: 600;">Add a Review</h4>
-          
+        <form class="review-form" id="review-form" onsubmit="submitReview(event)" style="display: none; background: var(--muted); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <span style="font-size: 1.25rem;">🏠</span>
+            <h4 style="margin: 0; font-weight: 700; font-size: 1.05rem;">Your Restaurant Review</h4>
+          </div>
+
           <div class="form-group">
-            <label>Your Rating</label>
+            <label>Overall Rating</label>
             <div id="rating-selector"></div>
           </div>
 
           <div class="form-group">
             <label for="review-name">Your Name</label>
-            <input type="text" id="review-name" readonly>
+            <input type="text" id="review-name" readonly style="opacity: 0.7;">
           </div>
 
           <div class="form-group">
-            <label for="review-comment">Your Comment</label>
-            <textarea id="review-comment" placeholder="Share your experience..." required></textarea>
+            <label for="review-comment">Your Experience</label>
+            <textarea id="review-comment" placeholder="How was the overall experience — service, ambiance, food quality?" required></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary">Submit Review</button>
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="submit" class="btn" style="background: #f59e0b; color: #000; font-weight: 700; border: none;">Submit Review</button>
+            <button type="button" class="btn btn-outline" onclick="toggleRestaurantReviewForm(document.getElementById('toggle-review-form'))">Cancel</button>
+          </div>
         </form>
 
         <!-- Reviews List -->
@@ -396,7 +416,7 @@
             </div>
           </div>
           <button class="btn btn-large ${isFavorited ? 'btn-primary' : 'btn-outline'}" 
-                  onclick="toggleFavorite(${restaurant.id}, this)">
+                  onclick="toggleFavorite('${restaurant.id}', this)">
             ${isFavorited ? '♥ Favorited' : '♡ Add to Favorites'}
           </button>
         </div>
@@ -488,8 +508,27 @@
       await renderMenuAndDishReviews(restaurant.id);
     }
 
+    // ── Toggle helpers (use display style directly to avoid .active class mismatch) ──
+    function toggleRestaurantReviewForm(btn) {
+      const form = document.getElementById('review-form');
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : 'block';
+      btn.textContent = isOpen ? '✏️ Write a Review' : '✕ Cancel';
+      btn.style.background = isOpen ? '#f59e0b' : 'var(--muted)';
+      btn.style.color = isOpen ? '#000' : 'var(--foreground)';
+    }
+
+    function toggleDishReviewForm(btn) {
+      const form = document.getElementById('dish-review-form');
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : 'block';
+      btn.textContent = isOpen ? '+ Write a Dish Review' : '✕ Cancel';
+    }
+
+    // ── Bug fix: skip buttons/links that have an ID (our real UI elements) ──
     function removeLegacyWriteReviewButtons() {
       document.querySelectorAll('button, a').forEach((el) => {
+        if (el.id) return; // skip elements with an ID — they're intentional UI
         const text = (el.textContent || '').trim().toLowerCase();
         if (text === 'write a review' || text === 'write review') {
           el.remove();
@@ -500,7 +539,7 @@
     async function submitReview(event) {
       event.preventDefault();
 
-      const user = await db.getUser();
+      const user = db.getUser(); // synchronous now
       if (!user) {
         alert('Please login to submit a review');
         window.location.href = pagePaths.loginPath;
@@ -516,29 +555,40 @@
 
       const restaurantId = parseInt(getUrlParam('id'), 10);
       const comment = document.getElementById('review-comment').value;
-      const rating = parseInt(document.getElementById('review-rating-input').value) || 5;
+      const rating = parseInt(document.getElementById('review-rating-input')?.value) || 5;
 
       if (!restaurantId) {
         alert('Invalid restaurant');
         return;
       }
 
+      const submitBtn = event.target.querySelector('[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+
       try {
         await createReviewForRestaurant(restaurantId, comment, rating, token);
         const updatedReviews = await getReviewsByRestaurantId(restaurantId);
         renderReviews(updatedReviews);
 
+        // Collapse and reset form
         document.getElementById('review-comment').value = '';
-        document.getElementById('review-rating-input').value = '5';
-        alert('Review submitted successfully!');
+        const ratingInput = document.getElementById('review-rating-input');
+        if (ratingInput) ratingInput.value = '5';
+        const toggleBtn = document.getElementById('toggle-review-form');
+        if (toggleBtn) toggleRestaurantReviewForm(toggleBtn);
       } catch (error) {
         alert(error.message || 'Failed to submit review');
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Review'; }
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeData();
-      renderRestaurantDetail();
+      if (db.hasValidSession()) {
+        await db.syncFavoritesFromServer();
+      }
+      await renderRestaurantDetail();
       setupHeader();
       removeLegacyWriteReviewButtons();
     });

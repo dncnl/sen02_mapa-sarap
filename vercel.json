@@ -13,6 +13,7 @@
     { "source": "/api/admin/places/:id", "destination": "/api/admin/places.js?id=:id" },
     { "source": "/api/admin/dishes/:id", "destination": "/api/admin/dishes.js?id=:id" },
     { "source": "/api/admin/amenities/:id", "destination": "/api/admin/amenities.js?id=:id" },
+    { "source": "/api/favorites", "destination": "/api/stats.js" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/admin", "destination": "/src/pages/admin/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }

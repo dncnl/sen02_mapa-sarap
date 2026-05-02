@@ -285,11 +285,13 @@ async function fetchReviews(placeId) {
 
 /**
  * Fetch statistics from API
+ * Stats are served via /api/restaurants?stats=true to keep serverless
+ * function count within Vercel Hobby plan's 12-function limit.
  * @returns {Object} stats object
  */
 async function fetchStats() {
   try {
-    const response = await fetch(`${API_BASE}/stats`);
+    const response = await fetch(`${API_BASE}/restaurants?stats=true`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     return await response.json();
   } catch (error) {
@@ -306,6 +308,81 @@ async function fetchStats() {
   }
 }
 
+// ============================================
+// FAVORITES API FUNCTIONS
+// ============================================
+
+/**
+ * Fetch all favorited place IDs from the server for the logged-in user.
+ * @param {string} token - JWT token
+ * @returns {string[]} array of place ID strings
+ */
+async function fetchFavoritesFromServer(token) {
+  try {
+    const response = await fetch(`${API_BASE}/favorites`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const data = await response.json();
+    return Array.isArray(data.favorites) ? data.favorites.map(String) : [];
+  } catch (error) {
+    console.warn('Failed to fetch favorites from server:', error);
+    return null; // null signals caller to fall back to localStorage
+  }
+}
+
+/**
+ * Add a favorite on the server.
+ * @param {number|string} placeId
+ * @param {string} token
+ */
+async function addFavoriteToServer(placeId, token) {
+  try {
+    const response = await fetch(`${API_BASE}/favorites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ placeId: parseInt(placeId, 10) }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to add favorite on server:', error);
+    return null;
+  }
+}
+
+/**
+ * Remove a favorite on the server.
+ * @param {number|string} placeId
+ * @param {string} token
+ */
+async function removeFavoriteFromServer(placeId, token) {
+  try {
+    const response = await fetch(`${API_BASE}/favorites`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ placeId: parseInt(placeId, 10) }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to remove favorite on server:', error);
+    return null;
+  }
+}
+
 /**
  * Initialize data on page load
  */
@@ -314,6 +391,14 @@ async function initializeData() {
     console.log('Loading restaurants from API...');
     await fetchRestaurants();
     console.log(`Loaded ${restaurants.length} restaurants`);
+    // Sync favorites from server (bidirectional) for logged-in users.
+    // db is defined in common.js which is loaded after data.js, so we
+    // defer via setTimeout(0) to ensure common.js is parsed first.
+    setTimeout(async () => {
+      if (typeof db !== 'undefined' && db.hasValidSession()) {
+        await db.syncFavoritesFromServer();
+      }
+    }, 0);
   } catch (error) {
     console.error('Failed to initialize data:', error);
   }
@@ -336,7 +421,7 @@ async function getStats() {
 
 // Get a single restaurant by ID
 function getRestaurantById(id) {
-  return restaurants.find(r => r.id === parseInt(id));
+  return restaurants.find(r => String(r.id) === String(id));
 }
 
 // Get all reviews for a restaurant
