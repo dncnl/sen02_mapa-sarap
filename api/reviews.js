@@ -270,6 +270,10 @@ module.exports = async (req, res) => {
     const reviewInsert = await client.query(
       `INSERT INTO reviews (user_id, place_id, review_text, helpful_count)
        VALUES ($1, $2, $3, 0)
+       ON CONFLICT (user_id, place_id)
+       DO UPDATE SET
+         review_text = EXCLUDED.review_text,
+         updated_at  = CURRENT_TIMESTAMP
        RETURNING id, place_id, review_text, helpful_count, created_at`,
       [authUser.userId, placeId, comment]
     );

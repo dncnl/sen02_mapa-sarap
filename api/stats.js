@@ -1,11 +1,47 @@
 /**
- * API Endpoint: GET /api/stats
- * Returns aggregated statistics across all restaurants
+ * API Endpoint: /api/favorites
+ * GET    -> returns all favorited place IDs for the authenticated user
+ * POST   -> adds a favorite (requires auth)
+ * DELETE -> removes a favorite (requires auth)
+ *
+ * Replaces api/stats.js (stats are now served via /api/restaurants?stats=true)
+ * to stay within Vercel Hobby plan's 12-function limit.
  */
 
 const { Client } = require('pg');
+const { getAuthUser } = require('./_lib/auth');
+
+async function parseJsonBody(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  if (typeof req.body === 'string' && req.body.trim() !== '') {
+    try { return JSON.parse(req.body); } catch { return {}; }
+  }
+  return new Promise((resolve) => {
+    const chunks = [];
+    req.on('data', (c) => chunks.push(c));
+    req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
+      if (!raw) return resolve({});
+      try { resolve(JSON.parse(raw)); } catch { resolve({}); }
+    });
+  });
+}
 
 module.exports = async (req, res) => {
+  // CORS-friendly pre-flight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (!['GET', 'POST', 'DELETE'].includes(req.method)) {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const authUser = getAuthUser(req);
+  if (!authUser?.userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
@@ -14,74 +50,65 @@ module.exports = async (req, res) => {
   try {
     await client.connect();
 
-    // Get total restaurants
-    const restaurantsResult = await client.query('SELECT COUNT(*) as count FROM places');
-    const totalRestaurants = parseInt(restaurantsResult.rows[0].count);
-
-    // Get average rating
-    const ratingResult = await client.query(`
-      SELECT AVG(rating) as avg_rating FROM ratings
+    // ── Ensure table exists (safe for first deploy) ──────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_favorites (
+        id SERIAL PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        place_id INT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, place_id)
+      )
     `);
-    const avgRating = ratingResult.rows[0].avg_rating ? 
-      parseFloat(ratingResult.rows[0].avg_rating).toFixed(1) : 0;
 
-    // Get total reviews
-    const reviewsResult = await client.query('SELECT COUNT(*) as count FROM reviews');
-    const totalReviews = parseInt(reviewsResult.rows[0].count);
+    // ── GET: return all favorited place IDs ──────────────────────────────────
+    if (req.method === 'GET') {
+      const result = await client.query(
+        'SELECT place_id FROM user_favorites WHERE user_id = $1 ORDER BY created_at DESC',
+        [authUser.userId]
+      );
+      const placeIds = result.rows.map((r) => String(r.place_id));
+      return res.status(200).json({ favorites: placeIds });
+    }
 
-    // Get total ratings
-    const ratingsResult = await client.query('SELECT COUNT(*) as count FROM ratings');
-    const totalRatings = parseInt(ratingsResult.rows[0].count);
+    const body = await parseJsonBody(req);
+    const placeId = parseInt(body.placeId, 10);
 
-    // Get top rated dish
-    const topDishResult = await client.query(`
-      SELECT 
-        d.id,
-        d.name,
-        p.name as restaurant_name,
-        d.place_id,
-        ROUND(AVG(dr.rating)::numeric, 1) as avg_rating,
-        COUNT(dr.id) as review_count
-      FROM dishes d
-      LEFT JOIN dish_reviews dr ON d.id = dr.dish_id
-      LEFT JOIN places p ON d.place_id = p.id
-      GROUP BY d.id, d.name, p.name, d.place_id
-      HAVING COUNT(dr.id) > 0
-      ORDER BY AVG(dr.rating) DESC, COUNT(dr.id) DESC
-      LIMIT 1
-    `);
-    
-    const topRatedDish = topDishResult.rows[0] ? {
-      id: topDishResult.rows[0].id,
-      name: topDishResult.rows[0].name,
-      restaurantName: topDishResult.rows[0].restaurant_name,
-      restaurantId: topDishResult.rows[0].place_id,
-      avgRating: parseFloat(topDishResult.rows[0].avg_rating),
-      reviewCount: parseInt(topDishResult.rows[0].review_count)
-    } : null;
+    if (!Number.isInteger(placeId) || placeId <= 0) {
+      return res.status(400).json({ error: 'Valid placeId is required' });
+    }
 
-    // Get count of active foodies (users with at least one review or rating)
-    const activeFoodiesResult = await client.query(`
-      SELECT COUNT(DISTINCT user_id) as active_count
-      FROM (
-        SELECT DISTINCT user_id FROM reviews
-        UNION
-        SELECT DISTINCT user_id FROM ratings
-      ) as active_users
-    `);
-    const activeFoodies = parseInt(activeFoodiesResult.rows[0].active_count);
+    // Verify place exists
+    const placeCheck = await client.query(
+      'SELECT id FROM places WHERE id = $1 LIMIT 1',
+      [placeId]
+    );
+    if (placeCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
 
-    res.status(200).json({
-      totalRestaurants,
-      avgRating,
-      totalReviews,
-      totalRatings,
-      topRatedDish,
-      activeFoodies
-    });
+    // ── POST: add favorite ───────────────────────────────────────────────────
+    if (req.method === 'POST') {
+      await client.query(
+        `INSERT INTO user_favorites (user_id, place_id)
+         VALUES ($1, $2)
+         ON CONFLICT (user_id, place_id) DO NOTHING`,
+        [authUser.userId, placeId]
+      );
+      return res.status(200).json({ favorited: true, placeId });
+    }
+
+    // ── DELETE: remove favorite ──────────────────────────────────────────────
+    if (req.method === 'DELETE') {
+      await client.query(
+        'DELETE FROM user_favorites WHERE user_id = $1 AND place_id = $2',
+        [authUser.userId, placeId]
+      );
+      return res.status(200).json({ favorited: false, placeId });
+    }
   } catch (error) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Favorites API error:', error);
+    return res.status(500).json({ error: error.message });
   } finally {
     await client.end();
   }

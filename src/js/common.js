@@ -67,6 +67,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // ============================================
 
 const db = {
+  // ── Key helpers ──────────────────────────────────────────────────────────
   getFavoritesKey() {
     const user = this.getUser();
     if (!user) return null;
@@ -77,59 +78,85 @@ const db = {
   migrateLegacyFavorites() {
     const key = this.getFavoritesKey();
     if (!key) return;
-
     const alreadyScoped = localStorage.getItem(key);
     if (alreadyScoped) return;
-
     const legacy = localStorage.getItem('mapa-favorites');
     if (!legacy) return;
-
     try {
       const parsed = JSON.parse(legacy);
-      if (Array.isArray(parsed)) {
-        localStorage.setItem(key, JSON.stringify(parsed));
-      }
-    } catch (error) {
-      // Ignore bad legacy data.
-    }
+      if (Array.isArray(parsed)) localStorage.setItem(key, JSON.stringify(parsed));
+    } catch { /* ignore */ }
   },
 
-  getFavorites() {
+  // ── Cache helpers (localStorage) ─────────────────────────────────────────
+  _getCachedFavorites() {
     const key = this.getFavoritesKey();
     if (!key) return [];
-
     this.migrateLegacyFavorites();
-
-    const favorites = localStorage.getItem(key);
-    return favorites ? JSON.parse(favorites) : [];
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw).map(String) : [];
+    } catch { return []; }
   },
 
-  saveFavorite(restaurantId) {
+  _setCachedFavorites(ids) {
     const key = this.getFavoritesKey();
     if (!key) return;
+    localStorage.setItem(key, JSON.stringify(ids.map(String)));
+  },
 
-    const favorites = this.getFavorites();
+  // ── Bidirectional sync ────────────────────────────────────────────────────
+  /**
+   * Pull favorites from the server and write them to the localStorage cache.
+   * Called once on page load when a user is logged in.
+   */
+  async syncFavoritesFromServer() {
+    const token = this.getToken();
+    if (!token) return;
+    try {
+      // fetchFavoritesFromServer is defined in data.js (loaded before common.js)
+      if (typeof fetchFavoritesFromServer !== 'function') return;
+      const serverIds = await fetchFavoritesFromServer(token);
+      if (Array.isArray(serverIds)) {
+        this._setCachedFavorites(serverIds);
+      }
+    } catch { /* fail silently — localStorage cache stays */ }
+  },
+
+  // ── Public favorites API (async, hybrid) ──────────────────────────────────
+  async getFavorites() {
+    return this._getCachedFavorites();
+  },
+
+  async saveFavorite(restaurantId) {
     const strId = String(restaurantId);
-    if (!favorites.map(String).includes(strId)) {
-      favorites.push(strId);
-      localStorage.setItem(key, JSON.stringify(favorites));
+    const current = this._getCachedFavorites();
+    if (!current.includes(strId)) {
+      this._setCachedFavorites([...current, strId]);
+    }
+    // Fire-and-forget to DB
+    const token = this.getToken();
+    if (token && typeof addFavoriteToServer === 'function') {
+      addFavoriteToServer(restaurantId, token).catch(() => {});
     }
   },
 
-  removeFavorite(restaurantId) {
-    const key = this.getFavoritesKey();
-    if (!key) return;
-
-    const favorites = this.getFavorites();
+  async removeFavorite(restaurantId) {
     const strId = String(restaurantId);
-    const filtered = favorites.filter(id => String(id) !== strId);
-    localStorage.setItem(key, JSON.stringify(filtered));
+    const filtered = this._getCachedFavorites().filter(id => id !== strId);
+    this._setCachedFavorites(filtered);
+    // Fire-and-forget to DB
+    const token = this.getToken();
+    if (token && typeof removeFavoriteFromServer === 'function') {
+      removeFavoriteFromServer(restaurantId, token).catch(() => {});
+    }
   },
 
-  isFavorite(restaurantId) {
-    return this.getFavorites().map(String).includes(String(restaurantId));
+  async isFavorite(restaurantId) {
+    return this._getCachedFavorites().includes(String(restaurantId));
   },
 
+  // ── Auth helpers ─────────────────────────────────────────────────────────
   getUser() {
     const user = localStorage.getItem('mapa-user');
     return user ? JSON.parse(user) : null;
@@ -142,7 +169,6 @@ const db = {
   saveAuthSession(user, token) {
     this.saveUser(user);
     localStorage.setItem('mapa-token', token);
-    // Backward compatibility for older builds that used a generic token key.
     localStorage.setItem('token', token);
   },
 
@@ -274,21 +300,33 @@ window.setRating = (id, value, element) => {
 function renderReviews(reviewsList, containerId = 'reviews-list') {
   const container = document.getElementById(containerId);
   if (!container) return;
-  if (reviewsList.length === 0) {
-    container.innerHTML = '<p class="text-muted-foreground">No reviews yet. Be the first to share your experience!</p>';
+  if (!reviewsList || reviewsList.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 1.5rem; text-align: center; background: var(--muted); border-radius: 12px; border: 1px dashed var(--border);">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍽️</div>
+        <p style="color: var(--muted-foreground); margin: 0;">No reviews yet. Be the first to share your experience!</p>
+      </div>`;
     return;
   }
   container.innerHTML = reviewsList.map(review => `
-    <div class="review-item" style="padding: 1rem 0; border-bottom: 1px solid var(--border);">
-      <div class="review-header" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-        <div class="review-author" style="font-weight: 700;">${review.userName}</div>
-        <div class="review-date" style="font-size: 0.8rem; color: var(--muted-foreground);">${new Date(review.date).toLocaleDateString()}</div>
+    <div class="review-item" style="padding: 1rem 1.25rem; margin-bottom: 0.75rem; background: var(--background); border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #f59e0b;">
+      <div class="review-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+            ${(review.userName || 'A')[0].toUpperCase()}
+          </div>
+          <div class="review-author" style="font-weight: 700;">${review.userName || 'Anonymous'}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="review-date" style="font-size: 0.75rem; color: var(--muted-foreground);">${new Date(review.date).toLocaleDateString()}</div>
+        </div>
       </div>
-      <div class="review-rating" style="margin-bottom: 0.5rem;">${renderStars(review.rating)}</div>
-      <p class="review-comment" style="font-size: 0.95rem;">${review.comment}</p>
+      <div class="review-rating" style="margin-bottom: 0.5rem; color: #f59e0b; font-size: 1rem;">${renderStars(review.rating)} <span style="color: var(--muted-foreground); font-size: 0.8rem;">${review.rating}/5</span></div>
+      <p class="review-comment" style="font-size: 0.95rem; margin: 0; line-height: 1.6; color: var(--foreground);">${review.comment}</p>
     </div>
   `).join('');
 }
+
 
 // ============================================
 // RESTAURANT CARD RENDERING
@@ -370,7 +408,7 @@ async function createRestaurantCard(restaurant) {
 }
 
 async function toggleFavorite(restaurantId, button) {
-  const user = await db.getUser();
+  const user = db.getUser();
   if (!user) {
     alert('Please login to add favorites');
     window.location.href = pagePaths.loginPath;
@@ -382,7 +420,7 @@ async function toggleFavorite(restaurantId, button) {
   if (isCurrentlyFavorited) {
     await db.removeFavorite(restaurantId);
     if (button.classList.contains('favorite-btn')) {
-      button.textContent = '♡';
+      button.innerHTML = '<span style="font-size: 1.2rem; line-height: 1;">♡</span>';
       button.classList.remove('active');
     } else {
       button.textContent = '♡ Add to Favorites';
@@ -392,7 +430,7 @@ async function toggleFavorite(restaurantId, button) {
   } else {
     await db.saveFavorite(restaurantId);
     if (button.classList.contains('favorite-btn')) {
-      button.textContent = '♥';
+      button.innerHTML = '<span style="font-size: 1.2rem; line-height: 1;">♥</span>';
       button.classList.add('active');
     } else {
       button.textContent = '♥ Favorited';
