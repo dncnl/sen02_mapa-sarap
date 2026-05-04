@@ -157,8 +157,12 @@
       }
 
       // Render restaurant cards
-      const cards = await Promise.all(favoriteRestaurants.map(r => createRestaurantCard(r)));
-      favoritesContent.innerHTML = `<div class="grid-restaurants">${cards.join('')}</div>`;
+      try {
+        const cards = await Promise.all(favoriteRestaurants.map(r => createRestaurantCard(r)));
+        favoritesContent.innerHTML = `<div class="grid-restaurants">${cards.join('')}</div>`;
+      } catch (err) {
+        favoritesContent.innerHTML = `<div style="color: red; padding: 2rem;">Error rendering cards: ${err.message}<br><pre>${err.stack}</pre></div>`;
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
