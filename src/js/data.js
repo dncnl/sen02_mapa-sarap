@@ -240,7 +240,7 @@ async function createReviewForRestaurant(restaurantId, comment, rating, token) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     if (response.status === 401) {
-      db.clearAuthSession();
+      db.logout();
       alert('Your session has expired. Please log in again.');
       window.location.href = window.location.pathname.includes('/pages/') 
         ? '../auth/login.html' 
@@ -334,7 +334,7 @@ async function fetchFavoritesFromServer(token) {
     });
     if (!response.ok) {
       if (response.status === 401) {
-        db.clearAuthSession();
+        db.logout();
         window.location.href = window.location.pathname.includes('/pages/') 
           ? '../auth/login.html' 
           : './src/pages/auth/login.html';
@@ -366,7 +366,7 @@ async function addFavoriteToServer(placeId, token) {
     });
     if (!response.ok) {
       if (response.status === 401) {
-        db.clearAuthSession();
+        db.logout();
         alert('Your session has expired. Please log in again.');
         window.location.href = window.location.pathname.includes('/pages/') 
           ? '../auth/login.html' 
@@ -400,7 +400,7 @@ async function removeFavoriteFromServer(placeId, token) {
     });
     if (!response.ok) {
       if (response.status === 401) {
-        db.clearAuthSession();
+        db.logout();
         alert('Your session has expired. Please log in again.');
         window.location.href = window.location.pathname.includes('/pages/') 
           ? '../auth/login.html' 
@@ -531,7 +531,7 @@ async function createDishReviewForDish(dishId, rating, comment, token) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     if (response.status === 401) {
-      db.clearAuthSession();
+      db.logout();
       alert('Your session has expired. Please log in again.');
       window.location.href = window.location.pathname.includes('/pages/') 
         ? '../auth/login.html' 
