@@ -319,7 +319,9 @@ async function fetchStats() {
  */
 async function fetchFavoritesFromServer(token) {
   try {
-    const response = await fetch(`${API_BASE}/favorites`, {
+    // Use a cache-buster query parameter because Vercel previously served this as an immutable static JS file,
+    // which caused aggressive browser-level caching of the raw source code.
+    const response = await fetch(`${API_BASE}/favorites?_cb=1`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) throw new Error(`API error: ${response.status}`);
