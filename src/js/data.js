@@ -237,8 +237,16 @@ async function createReviewForRestaurant(restaurantId, comment, rating, token) {
     }),
   });
 
-  const payload = await response.json();
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401) {
+      db.clearAuthSession();
+      alert('Your session has expired. Please log in again.');
+      window.location.href = window.location.pathname.includes('/pages/') 
+        ? '../auth/login.html' 
+        : './src/pages/auth/login.html';
+      throw new Error('Session expired');
+    }
     throw new Error(payload.error || 'Failed to submit review');
   }
 
@@ -324,7 +332,15 @@ async function fetchFavoritesFromServer(token) {
     const response = await fetch(`${API_BASE}/favorites?_cb=1`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    if (!response.ok) {
+      if (response.status === 401) {
+        db.clearAuthSession();
+        window.location.href = window.location.pathname.includes('/pages/') 
+          ? '../auth/login.html' 
+          : './src/pages/auth/login.html';
+      }
+      throw new Error(`API error: ${response.status}`);
+    }
     const data = await response.json();
     return Array.isArray(data.favorites) ? data.favorites.map(String) : [];
   } catch (error) {
@@ -349,6 +365,14 @@ async function addFavoriteToServer(placeId, token) {
       body: JSON.stringify({ placeId: parseInt(placeId, 10) }),
     });
     if (!response.ok) {
+      if (response.status === 401) {
+        db.clearAuthSession();
+        alert('Your session has expired. Please log in again.');
+        window.location.href = window.location.pathname.includes('/pages/') 
+          ? '../auth/login.html' 
+          : './src/pages/auth/login.html';
+        throw new Error('Session expired');
+      }
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Server error ${response.status}`);
     }
@@ -375,6 +399,14 @@ async function removeFavoriteFromServer(placeId, token) {
       body: JSON.stringify({ placeId: parseInt(placeId, 10) }),
     });
     if (!response.ok) {
+      if (response.status === 401) {
+        db.clearAuthSession();
+        alert('Your session has expired. Please log in again.');
+        window.location.href = window.location.pathname.includes('/pages/') 
+          ? '../auth/login.html' 
+          : './src/pages/auth/login.html';
+        throw new Error('Session expired');
+      }
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || `Server error ${response.status}`);
     }
@@ -496,8 +528,16 @@ async function createDishReviewForDish(dishId, rating, comment, token) {
     }),
   });
 
-  const payload = await response.json();
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401) {
+      db.clearAuthSession();
+      alert('Your session has expired. Please log in again.');
+      window.location.href = window.location.pathname.includes('/pages/') 
+        ? '../auth/login.html' 
+        : './src/pages/auth/login.html';
+      throw new Error('Session expired');
+    }
     throw new Error(payload.error || 'Failed to submit dish review');
   }
 
