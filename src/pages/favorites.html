@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Favorites - MAPA-Sarap</title>
+  <title>My Favorites - MAPA-Sarap</title>
+  <meta name="description" content="Your saved restaurants and food bookmarks on MAPA-Sarap.">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -21,7 +22,7 @@
         <nav>
           <a href="../../index.html">Discover</a>
           <a href="leaderboard.html">Leaderboard</a>
-          <a href="favorites.html">Favorites</a>
+          <a href="favorites.html" aria-current="page">Favorites</a>
         </nav>
 
         <div class="header-actions"></div>
@@ -31,31 +32,74 @@
 
   <main>
     <div class="container py-12">
-      <div style="margin-bottom: 2rem;">
-        <h1 style="font-size: 2.25rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--foreground);">
-          My Favorites
-        </h1>
-        <p style="color: var(--muted-foreground); font-size: 1.125rem;">
-          Your saved restaurants and bookmarks
-        </p>
+      <div style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div>
+          <h1 style="font-size: 2.25rem; font-weight: bold; margin-bottom: 0.25rem; color: var(--foreground);">
+            ♥ My Favorites
+          </h1>
+          <p style="color: var(--muted-foreground); font-size: 1.125rem; margin: 0;">
+            Your saved restaurants and bookmarks
+          </p>
+        </div>
+        <div id="favorites-count-badge" style="display: none; margin-left: auto;">
+          <span id="favorites-count" style="background: var(--primary); color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700;"></span>
+        </div>
       </div>
 
-      <div id="favorites-content"></div>
+      <div id="favorites-content">
+        <!-- Loading skeleton -->
+        <div id="favorites-loading" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+          <div style="height: 360px; border-radius: 16px; background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite;"></div>
+          <div style="height: 360px; border-radius: 16px; background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; animation-delay: 0.2s;"></div>
+          <div style="height: 360px; border-radius: 16px; background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; animation-delay: 0.4s;"></div>
+        </div>
+      </div>
     </div>
   </main>
 
   <!-- FOOTER -->
   <footer>
-    <p>&copy; 2024 MAPA-Sarap. All rights reserved.</p>
+    <p>&copy; 2026 MAPA-Sarap. All rights reserved.</p>
   </footer>
 
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="mobile-nav">
+    <a href="../../index.html" class="mobile-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      <span>Discover</span>
+    </a>
+    <a href="leaderboard.html" class="mobile-nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg>
+      <span>Best</span>
+    </a>
+    <a href="favorites.html" class="mobile-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      <span>Saved</span>
+    </a>
+  </div>
+
+  <style>
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+  </style>
+
+  <!-- data.js MUST be loaded before common.js -->
   <script src="../js/data.js"></script>
   <script src="../js/common.js"></script>
   <script>
+    /**
+     * Render the favorites grid.
+     * Called on page load and whenever a favorite is toggled on this page.
+     */
     async function renderFavorites() {
-      const user = db.getUser();
       const favoritesContent = document.getElementById('favorites-content');
+      const countBadge = document.getElementById('favorites-count-badge');
+      const countEl = document.getElementById('favorites-count');
 
+      // Verify session
+      const user = db.getUser();
       if (!user) {
         favoritesContent.innerHTML = `
           <div class="empty-state">
@@ -65,53 +109,73 @@
             <a href="auth/login.html" class="btn btn-primary">Go to Login</a>
           </div>
         `;
+        if (countBadge) countBadge.style.display = 'none';
         return;
       }
 
-      const favorites = await db.getFavorites();
+      // Read from the merged local cache (already synced from server on page load)
+      const favoriteIds = await db.getFavorites();
 
-      if (!Array.isArray(favorites) || favorites.length === 0) {
+      if (!Array.isArray(favoriteIds) || favoriteIds.length === 0) {
         favoritesContent.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">♡</div>
             <div class="empty-state-title">No Favorites Yet</div>
-            <p class="empty-state-text">Start exploring restaurants and add your favorites to save them for later.</p>
+            <p class="empty-state-text">Start exploring restaurants and heart the ones you love to save them here.</p>
             <a href="../../index.html" class="btn btn-primary">Explore Restaurants</a>
           </div>
         `;
+        if (countBadge) countBadge.style.display = 'none';
         return;
       }
 
-      const favoriteRestaurants = favorites
+      // Map IDs to restaurant objects (restaurants[] populated by initializeData)
+      const favoriteRestaurants = favoriteIds
         .map(id => getRestaurantById(id))
         .filter(r => r !== undefined);
 
       if (favoriteRestaurants.length === 0) {
         favoritesContent.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state-icon">♡</div>
-            <div class="empty-state-title">No Favorites Yet</div>
-            <p class="empty-state-text">Start exploring restaurants and add your favorites to save them for later.</p>
-            <a href="../../index.html" class="btn btn-primary">Explore Restaurants</a>
+            <div class="empty-state-icon">🍽️</div>
+            <div class="empty-state-title">Restaurants Not Found</div>
+            <p class="empty-state-text">
+              ${favoriteIds.length} favorite(s) saved, but restaurant data hasn't loaded yet.
+              <br><a href="../../index.html" style="color: var(--primary);">Try refreshing from the home page</a>.
+            </p>
+            <a href="../../index.html" class="btn btn-primary">Go to Discover</a>
           </div>
         `;
+        if (countBadge) countBadge.style.display = 'none';
         return;
       }
 
+      // Update badge count
+      if (countBadge && countEl) {
+        countEl.textContent = `${favoriteRestaurants.length} saved`;
+        countBadge.style.display = 'block';
+      }
+
+      // Render restaurant cards
       const cards = await Promise.all(favoriteRestaurants.map(r => createRestaurantCard(r)));
       favoritesContent.innerHTML = `<div class="grid-restaurants">${cards.join('')}</div>`;
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Load all restaurant data from the API
       await initializeData();
-      // Sync from server before rendering so we get the freshest data
+
+      // 2. If logged in, sync favorites from the server (merges with local)
       if (db.hasValidSession()) {
         await db.syncFavoritesFromServer();
       }
+
+      // 3. Render the favorites grid
       await renderFavorites();
+
+      // 4. Setup header (auth buttons, mobile nav toggle)
       setupHeader();
     });
-
   </script>
 </body>
 </html>

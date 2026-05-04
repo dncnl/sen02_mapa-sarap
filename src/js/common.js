@@ -107,20 +107,28 @@ const db = {
 
   // ── Bidirectional sync ────────────────────────────────────────────────────
   /**
-   * Pull favorites from the server and write them to the localStorage cache.
+   * Pull favorites from the server and MERGE with the local localStorage cache.
+   * Merging ensures locally-saved favorites (optimistic updates) are not lost
+   * if the server has not yet confirmed them.
    * Called once on page load when a user is logged in.
+   * @returns {string[]} merged favorites array
    */
   async syncFavoritesFromServer() {
     const token = this.getToken();
-    if (!token) return;
+    if (!token) return this._getCachedFavorites();
     try {
-      // fetchFavoritesFromServer is defined in data.js (loaded before common.js)
-      if (typeof fetchFavoritesFromServer !== 'function') return;
+      // fetchFavoritesFromServer is defined in data.js
+      if (typeof fetchFavoritesFromServer !== 'function') return this._getCachedFavorites();
       const serverIds = await fetchFavoritesFromServer(token);
       if (Array.isArray(serverIds)) {
-        this._setCachedFavorites(serverIds);
+        // Merge: union of server + local so neither source loses data
+        const localIds = this._getCachedFavorites();
+        const merged = [...new Set([...serverIds, ...localIds])];
+        this._setCachedFavorites(merged);
+        return merged;
       }
     } catch { /* fail silently — localStorage cache stays */ }
+    return this._getCachedFavorites();
   },
 
   // ── Public favorites API (async, hybrid) ──────────────────────────────────
@@ -134,7 +142,7 @@ const db = {
     if (!current.includes(strId)) {
       this._setCachedFavorites([...current, strId]);
     }
-    // Fire-and-forget to DB
+    // Sync to server (best-effort, fire-and-forget)
     const token = this.getToken();
     if (token && typeof addFavoriteToServer === 'function') {
       addFavoriteToServer(restaurantId, token).catch(() => {});
@@ -145,7 +153,7 @@ const db = {
     const strId = String(restaurantId);
     const filtered = this._getCachedFavorites().filter(id => id !== strId);
     this._setCachedFavorites(filtered);
-    // Fire-and-forget to DB
+    // Sync removal to server (best-effort, fire-and-forget)
     const token = this.getToken();
     if (token && typeof removeFavoriteFromServer === 'function') {
       removeFavoriteFromServer(restaurantId, token).catch(() => {});
@@ -417,6 +425,7 @@ async function toggleFavorite(restaurantId, button) {
 
   const isCurrentlyFavorited = await db.isFavorite(restaurantId);
 
+  // Optimistically update the button UI immediately
   if (isCurrentlyFavorited) {
     await db.removeFavorite(restaurantId);
     if (button.classList.contains('favorite-btn')) {
@@ -439,8 +448,9 @@ async function toggleFavorite(restaurantId, button) {
     }
   }
 
+  // Re-render the favorites page grid if we are on that page
   if (window.location.pathname.endsWith('/favorites.html') && typeof renderFavorites === 'function') {
-    renderFavorites();
+    await renderFavorites();
   }
 }
 
