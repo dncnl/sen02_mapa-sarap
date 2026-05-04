@@ -483,7 +483,8 @@ async function renderRestaurantGrid(filteredRestaurants, containerId = 'restaura
 // ============================================
 
 function getRestaurantFilterContext() {
-  if (typeof window.getRestaurantFilterContext === 'function') {
+  // Check if a custom context provider is registered and it's NOT this exact function
+  if (typeof window.getRestaurantFilterContext === 'function' && window.getRestaurantFilterContext !== getRestaurantFilterContext) {
     return window.getRestaurantFilterContext();
   }
 
