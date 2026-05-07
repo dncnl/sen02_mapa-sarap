@@ -72,8 +72,17 @@ CREATE TABLE IF NOT EXISTS dish_reviews (
     dish_id INT REFERENCES dishes(id) ON DELETE CASCADE,
     rating INT CHECK (rating BETWEEN 1 AND 5),
     review_text TEXT,
+    helpful_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, dish_id)
+);
+
+CREATE TABLE IF NOT EXISTS dish_review_helpful_votes (
+    id SERIAL PRIMARY KEY,
+    dish_review_id INT NOT NULL REFERENCES dish_reviews(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(dish_review_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS review_images (

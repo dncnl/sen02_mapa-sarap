@@ -173,6 +173,11 @@
         ? ''
         : createdAt.toLocaleString();
 
+      const isHelpful = review.hasHelpfulVote ? 'active' : '';
+      const helpfulBtnStyle = review.hasHelpfulVote 
+        ? 'color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: #f59e0b;' 
+        : 'color: var(--muted-foreground);';
+
       return `
         <div class="review-item">
           <div class="review-header">
@@ -183,6 +188,12 @@
           </div>
           <div class="review-rating">${renderStars(review.rating)} ${review.rating}/5</div>
           <div class="review-text">${review.comment || 'No comment provided.'}</div>
+          
+          <div style="margin-top: 0.75rem; display: flex; align-items: center;">
+            <button onclick="handleToggleDishHelpful(${review.id})" class="btn btn-small btn-outline ${isHelpful}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; ${helpfulBtnStyle}">
+              <span style="font-size: 0.9rem;">👍</span> Helpful (${review.helpfulCount || 0})
+            </button>
+          </div>
         </div>
       `;
     }
@@ -580,6 +591,42 @@
         alert(error.message || 'Failed to submit review');
       } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Review'; }
+      }
+    }
+
+    async function handleToggleHelpful(reviewId) {
+      const token = db.getToken();
+      if (!token) {
+        alert('Please login to vote on reviews');
+        window.location.href = pagePaths.loginPath;
+        return;
+      }
+      try {
+        await toggleReviewHelpful(reviewId, token);
+        const restaurantId = parseInt(getUrlParam('id'), 10);
+        const updatedReviews = await getReviewsByRestaurantId(restaurantId);
+        renderReviews(updatedReviews);
+      } catch (error) {
+        alert(error.message || 'Failed to toggle vote');
+      }
+    }
+
+    async function handleToggleDishHelpful(dishReviewId) {
+      const token = db.getToken();
+      if (!token) {
+        alert('Please login to vote on reviews');
+        window.location.href = pagePaths.loginPath;
+        return;
+      }
+      try {
+        await toggleDishReviewHelpful(dishReviewId, token);
+        const dishId = parseInt(document.getElementById('dish-review-filter').value, 10);
+        if (dishId) {
+          delete dishReviewCache[dishId];
+          await renderDishReviewsPanel();
+        }
+      } catch (error) {
+        alert(error.message || 'Failed to toggle vote');
       }
     }
 

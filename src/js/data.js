@@ -253,6 +253,25 @@ async function createReviewForRestaurant(restaurantId, comment, rating, token) {
   return payload;
 }
 
+/**
+ * Toggle a helpful vote on a restaurant review
+ */
+async function toggleReviewHelpful(reviewId, token) {
+  const response = await fetch(`${API_BASE}/reviews`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reviewId }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to toggle helpful vote');
+  }
+  return await response.json();
+}
+
 function getTopRatedRestaurants(limit = 10) {
   return [...restaurants].sort((a, b) => b.rating - a.rating).slice(0, limit);
 }
@@ -542,6 +561,25 @@ async function createDishReviewForDish(dishId, rating, comment, token) {
   }
 
   return payload;
+}
+
+/**
+ * Toggle a helpful vote on a dish review
+ */
+async function toggleDishReviewHelpful(dishReviewId, token) {
+  const response = await fetch(`${API_BASE}/dish-reviews`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ dishReviewId }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to toggle dish review helpful vote');
+  }
+  return await response.json();
 }
 
 // Get all amenities for a restaurant

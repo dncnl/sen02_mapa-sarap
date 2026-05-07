@@ -35,14 +35,14 @@ async function parseJsonBody(req) {
 module.exports = async (req, res) => {
   // CORS-friendly pre-flight
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (!['GET', 'POST'].includes(req.method)) {
+  if (!['GET', 'POST', 'PATCH'].includes(req.method)) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -57,6 +57,8 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const { dishId } = req.query;
       const parsedDishId = parseInt(dishId, 10);
+      const authUser = getAuthUser(req);
+      const viewerUserId = authUser?.userId ? parseInt(authUser.userId, 10) : null;
 
       if (!Number.isInteger(parsedDishId) || parsedDishId <= 0) {
         return res.status(400).json({ error: 'Valid dishId query parameter required' });
@@ -88,12 +90,19 @@ module.exports = async (req, res) => {
            dr.dish_id,
            dr.rating,
            dr.review_text,
-           dr.created_at
+           dr.helpful_count,
+           dr.created_at,
+           EXISTS (
+             SELECT 1
+             FROM dish_review_helpful_votes rv
+             WHERE rv.dish_review_id = dr.id
+               AND rv.user_id = $2
+           ) AS has_helpful_vote
          FROM dish_reviews dr
          JOIN users u ON dr.user_id = u.id
          WHERE dr.dish_id = $1
          ORDER BY dr.created_at DESC`,
-        [parsedDishId]
+        [parsedDishId, viewerUserId]
       );
 
       return res.status(200).json({
@@ -108,8 +117,91 @@ module.exports = async (req, res) => {
           rating: row.rating,
           comment: row.review_text || '',
           date: row.created_at,
+          helpfulCount: row.helpful_count || 0,
+          hasHelpfulVote: !!row.has_helpful_vote,
         })),
       });
+    }
+
+    if (req.method === 'PATCH') {
+      const authUser = getAuthUser(req);
+      if (!authUser?.userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const body = await parseJsonBody(req);
+      const dishReviewId = parseInt(body.dishReviewId, 10);
+
+      if (!Number.isInteger(dishReviewId) || dishReviewId <= 0) {
+        return res.status(400).json({ error: 'Valid dishReviewId is required' });
+      }
+
+      const reviewResult = await client.query(
+        'SELECT id FROM dish_reviews WHERE id = $1 LIMIT 1',
+        [dishReviewId]
+      );
+
+      if (reviewResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Dish review not found' });
+      }
+
+      await client.query('BEGIN');
+
+      try {
+        const existingVote = await client.query(
+          `SELECT id
+           FROM dish_review_helpful_votes
+           WHERE dish_review_id = $1 AND user_id = $2
+           LIMIT 1`,
+          [dishReviewId, authUser.userId]
+        );
+
+        let updatedResult;
+        let voted;
+
+        if (existingVote.rows.length > 0) {
+          await client.query(
+            `DELETE FROM dish_review_helpful_votes
+             WHERE dish_review_id = $1 AND user_id = $2`,
+            [dishReviewId, authUser.userId]
+          );
+
+          updatedResult = await client.query(
+            `UPDATE dish_reviews
+             SET helpful_count = GREATEST(COALESCE(helpful_count, 0) - 1, 0)
+             WHERE id = $1
+             RETURNING helpful_count`,
+            [dishReviewId]
+          );
+          voted = false;
+        } else {
+          await client.query(
+            `INSERT INTO dish_review_helpful_votes (dish_review_id, user_id)
+             VALUES ($1, $2)`,
+            [dishReviewId, authUser.userId]
+          );
+
+          updatedResult = await client.query(
+            `UPDATE dish_reviews
+             SET helpful_count = COALESCE(helpful_count, 0) + 1
+             WHERE id = $1
+             RETURNING helpful_count`,
+            [dishReviewId]
+          );
+          voted = true;
+        }
+
+        await client.query('COMMIT');
+
+        return res.status(200).json({
+          dishReviewId,
+          helpfulCount: parseInt(updatedResult.rows[0].helpful_count, 10) || 0,
+          voted,
+        });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     }
 
     const authUser = getAuthUser(req);

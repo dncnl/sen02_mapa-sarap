@@ -316,7 +316,12 @@ function renderReviews(reviewsList, containerId = 'reviews-list') {
       </div>`;
     return;
   }
-  container.innerHTML = reviewsList.map(review => `
+  container.innerHTML = reviewsList.map(review => {
+    const isHelpful = review.hasHelpfulVote ? 'active' : '';
+    const helpfulBtnStyle = review.hasHelpfulVote 
+      ? 'color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: #f59e0b;' 
+      : 'color: var(--muted-foreground);';
+    return `
     <div class="review-item" style="padding: 1rem 1.25rem; margin-bottom: 0.75rem; background: var(--background); border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #f59e0b;">
       <div class="review-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -331,8 +336,14 @@ function renderReviews(reviewsList, containerId = 'reviews-list') {
       </div>
       <div class="review-rating" style="margin-bottom: 0.5rem; color: #f59e0b; font-size: 1rem;">${renderStars(review.rating)} <span style="color: var(--muted-foreground); font-size: 0.8rem;">${review.rating}/5</span></div>
       <p class="review-comment" style="font-size: 0.95rem; margin: 0; line-height: 1.6; color: var(--foreground);">${review.comment}</p>
+      
+      <div style="margin-top: 0.75rem; display: flex; align-items: center;">
+        <button onclick="handleToggleHelpful(${review.id})" class="btn btn-small btn-outline ${isHelpful}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; ${helpfulBtnStyle}">
+          <span style="font-size: 0.9rem;">👍</span> Helpful (${review.helpfulCount || 0})
+        </button>
+      </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 
